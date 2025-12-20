@@ -209,7 +209,7 @@ export default function VotePanel({ slug, title }: VotePanelProps) {
 
   const statusCopy = useMemo(() => {
     if (!totalVotes) {
-      return "아직 반응이 없습니다";
+      return "아직 반응이 없거나 로그인하지 않으셨습니다.";
     }
 
     return approval >= 50
@@ -326,9 +326,8 @@ export default function VotePanel({ slug, title }: VotePanelProps) {
     <div className="overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60 p-4 shadow-2xl sm:p-6 lg:p-8">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.4em] text-white/50">실명제 반응</p>
-          <h3 className="text-2xl font-semibold text-white">{title} 추천 현황</h3>
-          <p className="text-sm text-white/60">Firebase 로그인 후 추천 또는 비추천을 남겨주세요.</p>
+          <p className="text-xs uppercase tracking-[0.4em] text-white/50">response</p>
+          <h3 className="text-2xl font-semibold text-white">{title} 리뷰</h3>
         </div>
         <div className="flex flex-col items-start gap-2 text-sm text-white/70">
           {user ? (
@@ -346,7 +345,7 @@ export default function VotePanel({ slug, title }: VotePanelProps) {
               onClick={handleLogin}
               className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
             >
-              Google 실명 로그인
+              Google 로그인
             </button>
           )}
         </div>

@@ -535,8 +535,7 @@ export default function ExperienceBanner() {
         </div>
 
         <div className="flex items-center gap-2 text-[0.65rem] uppercase tracking-[0.4em] text-white/40">
-          queue
-          <div className="relative flex flex-1 gap-2 overflow-hidden">
+          <div className="relative flex flex-1 gap-2 overflow-hidden" aria-label="다른 배너 선택">
             {queuePreview.length ? (
               queuePreview.map(({ item, isActive, position }, index) => (
                 <button
@@ -555,8 +554,8 @@ export default function ExperienceBanner() {
                 </button>
               ))
             ) : (
-              <span className="w-full rounded-full border border-dashed border-white/15 px-3 py-1 text-[0.7rem] text-white/50">
-                큐가 비어 있습니다.
+              <span className="w-full rounded-full border border-dashed border-white/15 px-3 py-1 text-[0.7rem] text-white/50 tracking-[0.1em]">
+                다른 공지가 없습니다.
               </span>
             )}
           </div>

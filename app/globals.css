@@ -28,6 +28,12 @@ body {
   overflow-x: hidden;
 }
 
+code,
+pre,
+.font-mono {
+  letter-spacing: 0.1em;
+}
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;

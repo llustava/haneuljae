@@ -180,9 +180,9 @@ export default function LogoShowcase() {
     <section id="logo-showcase" className="flex w-full flex-col gap-6 sm:gap-8 lg:gap-10">
       <div className="overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60 p-4 shadow-[0_25px_70px_rgba(15,23,42,0.6)] sm:p-5 lg:p-6">
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-xs uppercase tracking-[0.4em] text-white/40">studio tabs</p>
-          <span className="text-[0.65rem] uppercase tracking-[0.3em] text-white/40">
-            drag to explore
+          <p className="text-xs uppercase tracking-[0.4em] text-white/40">club tabs</p>
+          <span className="text-[0.65rem] uppercase tracking-[0.1em] text-white/40">
+            드래그하여 넘기기
           </span>
         </div>
         <div
@@ -236,21 +236,13 @@ export default function LogoShowcase() {
             sidebarOpen ? "lg:w-80" : "lg:w-24"
           }`}
         >
-          <div className="flex items-center justify-between px-4 py-4 sm:px-5 sm:py-6">
-            {sidebarOpen ? (
-              <div>
-                <p className="text-xs uppercase tracking-[0.4em] text-white/40">brand wall</p>
-                <h2 className="text-lg font-semibold text-white">로고 스택</h2>
-              </div>
-            ) : (
-              <p className="text-xs uppercase tracking-[0.4em] text-white/40">logos</p>
-            )}
+          <div className="flex items-center justify-end px-4 py-4 sm:px-5 sm:py-6">
             <button
               aria-label="사이드바 밀기"
               onClick={() => setSidebarOpen((prev) => !prev)}
-              className="group flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+              className="group flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-white transition hover:bg-white/20"
             >
-              <span className={`text-sm transition-transform duration-500 ${sidebarOpen ? "rotate-0" : "rotate-180"}`}>
+              <span className={`text-base transition-transform duration-500 ${sidebarOpen ? "rotate-0" : "rotate-180"}`}>
                 ⇤
               </span>
             </button>
@@ -286,9 +278,6 @@ export default function LogoShowcase() {
                 </button>
               );
             })}
-          </div>
-          <div className="border-t border-white/5 px-4 py-4 text-center text-xs text-white/50 lg:text-left">
-            {sidebarOpen ? "로고를 선택해 스토리를 불러오세요" : "탭"}
           </div>
         </aside>
         <div className="flex flex-1 flex-col gap-6 p-6 sm:p-8">

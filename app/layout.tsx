@@ -1,6 +1,5 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import SiteFooter from "@/components/site-footer";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,14 +13,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Studio Atlas",
-  description: "Immersive MDX-driven stories with social voting",
-};
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  viewportFit: "cover",
+  title: "2025 한어울제 소개",
+  description: "2025년 한어울제를 소개하고, 의견을 공유하는 사이트입니다.",
+  icons: {
+    icon: "/HSHS_LOGO.svg",
+  },
 };
 
 export default function RootLayout({
@@ -30,14 +26,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" suppressHydrationWarning>
+    <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-slate-950 text-slate-100 antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div className="app-shell flex min-h-screen flex-col">
-          <div className="flex-1">{children}</div>
-          <SiteFooter />
-        </div>
+        {children}
       </body>
     </html>
   );

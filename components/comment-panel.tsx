@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { onAuthStateChanged, signInWithPopup, signOut, User } from "firebase/auth";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import {
   addDoc,
   collection,
@@ -332,70 +332,15 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
     }
   };
 
-  const handleLogin = async () => {
-    if (!client) {
-      return;
-    }
-
-    try {
-      const credential = await signInWithPopup(client.auth, client.provider);
-
-      if (shouldEnforceDomain && !isEmailAllowed(credential.user.email)) {
-        setClientError(genericDomainRejectMessage);
-        await signOut(client.auth);
-        return;
-      }
-
-      const blockDoc = await getDoc(doc(client.db, BLOCK_COLLECTION, credential.user.uid));
-      if (blockDoc.exists()) {
-        const blockData = blockDoc.data() as { reason?: string } | undefined;
-        setClientError(formatBlockMessage(blockData?.reason));
-        await signOut(client.auth);
-        return;
-      }
-
-      setClientError(null);
-    } catch (error) {
-      console.error("로그인 실패", error);
-    }
-  };
-
-  const handleLogout = async () => {
-    if (!client) {
-      return;
-    }
-
-    await signOut(client.auth);
-  };
-
   return (
     <section className="overflow-hidden rounded-3xl border border-white/10 bg-slate-950/60 p-4 text-white shadow-[0_25px_80px_rgba(15,23,42,0.55)] sm:p-6 lg:p-8">
       <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.4em] text-white/50">comments</p>
           <h3 className="text-2xl font-semibold">{title} 댓글</h3>
-          <p className="text-sm text-white/60">총 {commentCount}개의 이야기</p>
+          <p className="text-sm text-white/60">댓글 {commentCount}개</p>
         </div>
-        <div className="flex flex-col items-start gap-2 text-sm text-white/70 sm:items-end">
-          {user ? (
-            <>
-              <span>{user.displayName ?? user.email}</span>
-              <button
-                onClick={handleLogout}
-                className="rounded-full border border-white/30 px-4 py-2 text-xs uppercase tracking-[0.3em] text-white transition hover:border-white"
-              >
-                로그아웃
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={handleLogin}
-              className="rounded-full bg-white px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-900 transition hover:bg-slate-100"
-            >
-              Google 로그인
-            </button>
-          )}
-        </div>
+        
       </header>
 
       {clientError ? (
@@ -409,7 +354,7 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
           value={commentBody}
           onChange={(event) => setCommentBody(event.target.value)}
           disabled={!user || isSubmitting}
-          placeholder={user ? "느낀 점이나 질문을 남겨주세요." : "로그인 후 댓글을 작성할 수 있습니다."}
+          placeholder={user ? "느낀 점이나 질문을 남겨주세요." : "로그인 후 댓글을 확인 및 작성할 수 있습니다."}
           className="h-32 w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:border-sky-300 focus:outline-none"
         />
         <button
@@ -571,7 +516,7 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
           ))
         ) : (
           <li className="rounded-2xl border border-dashed border-white/20 px-4 py-6 text-center text-sm text-white/50">
-            아직 댓글이 없습니다. 첫 번째 댓글을 남겨보세요.
+            아직 댓글이 없거나 로그인하지 않으셨습니다. 
           </li>
         )}
       </ul>
