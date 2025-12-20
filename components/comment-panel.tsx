@@ -1,0 +1,489 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { onAuthStateChanged, signInWithPopup, signOut, User } from "firebase/auth";
+import {
+  addDoc,
+  collection,
+  doc,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  Timestamp,
+  updateDoc,
+  where,
+} from "firebase/firestore";
+import type { FirebaseClient } from "@/lib/firebase/client";
+import { getFirebaseClient } from "@/lib/firebase/client";
+
+const allowedDomainRaw =
+  process.env.NEXT_PUBLIC_FIREBASE_ALLOWED_DOMAIN ??
+  process.env.NEXT_PUBLIC_ALLOWED_DOMAIN ??
+  process.env.NEXT_PUBLIC_FIREBASE_API_KEY_ALLOWED_DOMAIN ??
+  "";
+
+const normalizedAllowedDomain = allowedDomainRaw?.trim().toLowerCase();
+
+const isEmailAllowed = (email?: string | null) => {
+  if (!normalizedAllowedDomain) {
+    return true;
+  }
+
+  return email?.toLowerCase().endsWith(normalizedAllowedDomain) ?? false;
+};
+
+const domainErrorText = "올바른 도메인을 가진 이메일로 로그인 해 주세요.";
+
+const formatTimestamp = (value?: Timestamp | null) => {
+  if (!value) {
+    return "방금";
+  }
+
+  return new Intl.DateTimeFormat("ko-KR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(value.toDate());
+};
+
+type CommentPanelProps = {
+  slug: string;
+  title: string;
+};
+
+type CommentEntry = {
+  id: string;
+  userId: string;
+  displayName: string;
+  body: string;
+  parentId: string | null;
+  createdAt?: Timestamp | null;
+  isDeleted: boolean;
+};
+
+type CommentThread = CommentEntry & {
+  replies: CommentEntry[];
+};
+
+export default function CommentPanel({ slug, title }: CommentPanelProps) {
+  const [client, setClient] = useState<FirebaseClient | null>(null);
+  const [clientError, setClientError] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [comments, setComments] = useState<CommentEntry[]>([]);
+  const [commentBody, setCommentBody] = useState("");
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [activeReplyParent, setActiveReplyParent] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [replySubmittingId, setReplySubmittingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const shouldEnforceDomain = Boolean(normalizedAllowedDomain);
+  const domainErrorMessage = shouldEnforceDomain
+    ? `${domainErrorText}${normalizedAllowedDomain ? ` (${normalizedAllowedDomain})` : ""}`
+    : domainErrorText;
+
+  useEffect(() => {
+    try {
+      setClient(getFirebaseClient());
+    } catch (error) {
+      setClientError(
+        error instanceof Error ? error.message : "Firebase 구성이 필요합니다."
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!client) {
+      return undefined;
+    }
+
+    const unsubscribe = onAuthStateChanged(client.auth, async (nextUser) => {
+      if (!nextUser) {
+        setUser(null);
+        return;
+      }
+
+      if (shouldEnforceDomain && !isEmailAllowed(nextUser.email)) {
+        setClientError(domainErrorMessage);
+        setUser(null);
+        await signOut(client.auth);
+        return;
+      }
+
+      setClientError(null);
+      setUser(nextUser);
+    });
+
+    return unsubscribe;
+  }, [client, domainErrorMessage, shouldEnforceDomain]);
+
+  useEffect(() => {
+    if (!client) {
+      return undefined;
+    }
+
+    const commentsQuery = query(
+      collection(client.db, "logoComments"),
+      where("slug", "==", slug),
+      orderBy("createdAt", "asc")
+    );
+
+    const unsubscribe = onSnapshot(commentsQuery, (snapshot) => {
+      const nextEntries: CommentEntry[] = snapshot.docs.map((docSnapshot) => {
+        const data = docSnapshot.data() as {
+          displayName?: string;
+          body?: string;
+          parentId?: string | null;
+          userId?: string;
+          createdAt?: Timestamp | null;
+          isDeleted?: boolean;
+        };
+
+        return {
+          id: docSnapshot.id,
+          userId: data.userId ?? "",
+          displayName: data.displayName ?? "익명",
+          body: data.body ?? "",
+          parentId: data.parentId ?? null,
+          createdAt: data.createdAt ?? null,
+          isDeleted: Boolean(data.isDeleted),
+        };
+      });
+
+      setComments(nextEntries);
+    });
+
+    return unsubscribe;
+  }, [client, slug]);
+
+  const threads = useMemo<CommentThread[]>(() => {
+    const topLevel = comments.filter((entry) => !entry.parentId);
+
+    return topLevel.map((entry) => ({
+      ...entry,
+      replies: comments.filter((reply) => reply.parentId === entry.id),
+    }));
+  }, [comments]);
+
+  const commentCount = comments.length;
+
+  const handleCommentSubmit = async () => {
+    if (!client || !user) {
+      return;
+    }
+
+    const trimmed = commentBody.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      await addDoc(collection(client.db, "logoComments"), {
+        slug,
+        userId: user.uid,
+        displayName: user.displayName ?? user.email ?? "익명",
+        body: trimmed,
+        parentId: null,
+        createdAt: serverTimestamp(),
+        isDeleted: false,
+      });
+      setCommentBody("");
+      setClientError(null);
+    } catch (error) {
+      console.error("댓글 저장 실패", error);
+      setClientError("댓글 저장에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleReplySubmit = async (parentId: string) => {
+    if (!client || !user) {
+      return;
+    }
+
+    const parentEntry = comments.find((entry) => entry.id === parentId);
+    if (!parentEntry || parentEntry.parentId) {
+      setClientError("대댓글은 최상위 댓글에만 작성할 수 있습니다.");
+      return;
+    }
+
+    if (parentEntry.isDeleted) {
+      setClientError("삭제된 댓글에는 대댓글을 달 수 없습니다.");
+      return;
+    }
+
+    const trimmed = replyDrafts[parentId]?.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    setReplySubmittingId(parentId);
+
+    try {
+      await addDoc(collection(client.db, "logoComments"), {
+        slug,
+        userId: user.uid,
+        displayName: user.displayName ?? user.email ?? "익명",
+        body: trimmed,
+        parentId,
+        createdAt: serverTimestamp(),
+        isDeleted: false,
+      });
+      setReplyDrafts((prev) => ({ ...prev, [parentId]: "" }));
+      setActiveReplyParent(null);
+      setClientError(null);
+    } catch (error) {
+      console.error("대댓글 저장 실패", error);
+      setClientError("대댓글 저장에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setReplySubmittingId(null);
+    }
+  };
+
+  const handleDelete = async (comment: CommentEntry) => {
+    if (!client || !user) {
+      return;
+    }
+
+    if (comment.userId !== user.uid || comment.isDeleted) {
+      return;
+    }
+
+    setDeletingId(comment.id);
+
+    try {
+      await updateDoc(doc(client.db, "logoComments", comment.id), {
+        isDeleted: true,
+        body: "",
+        deletedAt: serverTimestamp(),
+      });
+      setClientError(null);
+    } catch (error) {
+      console.error("댓글 삭제 실패", error);
+      setClientError("댓글 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleLogin = async () => {
+    if (!client) {
+      return;
+    }
+
+    try {
+      const credential = await signInWithPopup(client.auth, client.provider);
+
+      if (shouldEnforceDomain && !isEmailAllowed(credential.user.email)) {
+        setClientError(domainErrorMessage);
+        await signOut(client.auth);
+        return;
+      }
+
+      setClientError(null);
+    } catch (error) {
+      console.error("로그인 실패", error);
+    }
+  };
+
+  const handleLogout = async () => {
+    if (!client) {
+      return;
+    }
+
+    await signOut(client.auth);
+  };
+
+  return (
+    <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-6 text-white shadow-[0_25px_80px_rgba(15,23,42,0.55)]">
+      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.4em] text-white/50">comments</p>
+          <h3 className="text-2xl font-semibold">{title} 댓글</h3>
+          <p className="text-sm text-white/60">총 {commentCount}개의 이야기</p>
+        </div>
+        <div className="flex flex-col items-start gap-2 text-sm text-white/70 sm:items-end">
+          {user ? (
+            <>
+              <span>{user.displayName ?? user.email}</span>
+              <button
+                onClick={handleLogout}
+                className="rounded-full border border-white/30 px-4 py-2 text-xs uppercase tracking-[0.3em] text-white transition hover:border-white"
+              >
+                로그아웃
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={handleLogin}
+              className="rounded-full bg-white px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-900 transition hover:bg-slate-100"
+            >
+              Google 로그인
+            </button>
+          )}
+        </div>
+      </header>
+
+      {clientError ? (
+        <p className="mt-4 rounded-2xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-100">
+          {clientError}
+        </p>
+      ) : null}
+
+      <div className="mt-6 space-y-4">
+        <textarea
+          value={commentBody}
+          onChange={(event) => setCommentBody(event.target.value)}
+          disabled={!user || isSubmitting}
+          placeholder={user ? "느낀 점이나 질문을 남겨주세요." : "로그인 후 댓글을 작성할 수 있습니다."}
+          className="h-32 w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:border-sky-300 focus:outline-none"
+        />
+        <button
+          type="button"
+          onClick={handleCommentSubmit}
+          disabled={!user || isSubmitting}
+          className="w-full rounded-2xl bg-white/90 px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isSubmitting ? "등록 중..." : "댓글 등록"}
+        </button>
+      </div>
+
+      <ul className="mt-8 space-y-4">
+        {threads.length ? (
+          threads.map((thread, threadIndex) => (
+            <li key={thread.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.4em] text-white/40">
+                      댓글 {threadIndex + 1}
+                    </p>
+                    <p
+                      className={`text-sm font-semibold ${
+                        thread.isDeleted ? "text-white/40" : "text-white"
+                      }`}
+                    >
+                      {thread.displayName}
+                    </p>
+                  </div>
+                  <p className="text-xs text-white/50">{formatTimestamp(thread.createdAt)}</p>
+                </div>
+                <p
+                  className={`whitespace-pre-line text-sm ${
+                    thread.isDeleted ? "text-white/40" : "text-white/80"
+                  }`}
+                >
+                  {thread.isDeleted ? "(삭제된 댓글입니다)" : thread.body}
+                </p>
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-white/60">
+                {!thread.isDeleted ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setActiveReplyParent((current) => (current === thread.id ? null : thread.id))
+                    }
+                    className={`rounded-full border px-3 py-1 transition ${
+                      activeReplyParent === thread.id
+                        ? "border-sky-300/80 text-white"
+                        : "border-white/20 hover:border-white/40"
+                    }`}
+                  >
+                    대댓글 달기
+                  </button>
+                ) : (
+                  <span className="rounded-full border border-white/10 px-3 py-1 text-white/40">
+                    대댓글 불가
+                  </span>
+                )}
+                {user?.uid === thread.userId && !thread.isDeleted ? (
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(thread)}
+                    disabled={deletingId === thread.id}
+                    className="rounded-full border border-white/20 px-3 py-1 text-white/70 transition hover:border-white hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {deletingId === thread.id ? "삭제 중..." : "삭제"}
+                  </button>
+                ) : null}
+                <span className="text-white/30">·</span>
+                <span>최대 1단계 대댓글만 허용됩니다.</span>
+              </div>
+
+              {activeReplyParent === thread.id && !thread.isDeleted ? (
+                <div className="mt-3 space-y-3 rounded-2xl border border-white/10 bg-slate-900/60 p-3">
+                  <textarea
+                    value={replyDrafts[thread.id] ?? ""}
+                    onChange={(event) =>
+                      setReplyDrafts((prev) => ({ ...prev, [thread.id]: event.target.value }))
+                    }
+                    disabled={!user || replySubmittingId === thread.id}
+                    placeholder="대댓글 내용을 입력하세요"
+                    className="h-24 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:border-sky-300 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleReplySubmit(thread.id)}
+                    disabled={!user || replySubmittingId === thread.id}
+                    className="w-full rounded-xl bg-white/90 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {replySubmittingId === thread.id ? "등록 중..." : "대댓글 등록"}
+                  </button>
+                </div>
+              ) : null}
+
+              {thread.replies.length ? (
+                <ul className="mt-4 space-y-3 border-l border-white/10 pl-4">
+                  {thread.replies.map((reply, replyIndex) => (
+                    <li key={reply.id} className="rounded-2xl border border-white/5 bg-slate-950/40 p-3">
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-xs uppercase tracking-[0.4em] text-white/40">
+                          - 대댓글 {threadIndex + 1}.{replyIndex + 1}
+                        </p>
+                        <p className="text-xs text-white/50">{formatTimestamp(reply.createdAt)}</p>
+                      </div>
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                        <p
+                          className={`text-sm font-semibold ${
+                            reply.isDeleted ? "text-white/40" : "text-white"
+                          }`}
+                        >
+                          {reply.displayName}
+                        </p>
+                        {user?.uid === reply.userId && !reply.isDeleted ? (
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(reply)}
+                            disabled={deletingId === reply.id}
+                            className="text-xs text-white/70 underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {deletingId === reply.id ? "삭제 중..." : "삭제"}
+                          </button>
+                        ) : null}
+                      </div>
+                      <p
+                        className={`whitespace-pre-line text-sm ${
+                          reply.isDeleted ? "text-white/40" : "text-white/80"
+                        }`}
+                      >
+                        {reply.isDeleted ? "(삭제된 댓글입니다)" : reply.body}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </li>
+          ))
+        ) : (
+          <li className="rounded-2xl border border-dashed border-white/20 px-4 py-6 text-center text-sm text-white/50">
+            아직 댓글이 없습니다. 첫 번째 댓글을 남겨보세요.
+          </li>
+        )}
+      </ul>
+    </section>
+  );
+}

@@ -7,6 +7,7 @@ import AuroraLens from "@/content/aurora-lens.mdx";
 import SolsticeMarket from "@/content/solstice-market.mdx";
 import NebulaLab from "@/content/nebula-lab.mdx";
 import VotePanel from "@/components/vote-panel";
+import CommentPanel from "@/components/comment-panel";
 
 const studios = [
   {
@@ -53,13 +54,13 @@ export default function LogoShowcase() {
 
   return (
     <section className="flex w-full flex-col gap-8">
-      <div className="relative flex min-h-[32rem] overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60 shadow-[0_35px_120px_rgba(15,23,42,0.7)]">
+      <div className="relative flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60 shadow-[0_35px_120px_rgba(15,23,42,0.7)] lg:min-h-[32rem] lg:flex-row">
         <aside
-          className={`relative flex flex-col border-r border-white/5 bg-slate-950/60 transition-[width] duration-500 ${
-            sidebarOpen ? "w-80" : "w-24"
+          className={`relative flex flex-col border-b border-white/5 bg-slate-950/60 transition-all duration-500 lg:border-b-0 lg:border-r ${
+            sidebarOpen ? "w-full lg:w-80" : "w-full lg:w-24"
           }`}
         >
-          <div className="flex items-center justify-between px-5 py-6">
+          <div className="flex items-center justify-between px-4 py-4 sm:px-5 sm:py-6">
             {sidebarOpen ? (
               <div>
                 <p className="text-xs uppercase tracking-[0.4em] text-white/40">brand wall</p>
@@ -78,7 +79,7 @@ export default function LogoShowcase() {
               </span>
             </button>
           </div>
-          <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-6">
+          <div className="flex-1 space-y-3 overflow-y-auto px-3 pb-4 sm:px-4 sm:pb-6">
             {studios.map((studio) => {
               const isActive = studio.slug === activeSlug;
               return (
@@ -110,11 +111,11 @@ export default function LogoShowcase() {
               );
             })}
           </div>
-          <div className="border-t border-white/5 px-5 py-6 text-xs text-white/50">
+          <div className="border-t border-white/5 px-4 py-4 text-center text-xs text-white/50 lg:text-left">
             {sidebarOpen ? "로고를 선택해 스토리를 불러오세요" : "탭"}
           </div>
         </aside>
-        <div className="flex flex-1 flex-col gap-6 p-8">
+        <div className="flex flex-1 flex-col gap-6 p-6 sm:p-8">
           <div className="space-y-3">
             <p className="text-xs uppercase tracking-[0.5em] text-white/50">{activeStudio.category}</p>
             <div className="flex flex-wrap items-center gap-3">
@@ -131,6 +132,7 @@ export default function LogoShowcase() {
         </div>
       </div>
       <VotePanel slug={activeStudio.slug} title={activeStudio.name} />
+      <CommentPanel slug={activeStudio.slug} title={activeStudio.name} />
     </section>
   );
 }

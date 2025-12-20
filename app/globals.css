@@ -64,3 +64,24 @@ body {
   font-size: 0.85rem;
   color: rgba(226, 232, 240, 0.65);
 }
+
+@media (max-width: 640px) {
+  body {
+    background: radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.12), transparent 55%)
+        #030712;
+  }
+
+  .mdx-content {
+    gap: 1rem;
+    font-size: 0.95rem;
+  }
+
+  .mdx-content h2,
+  .mdx-content h3 {
+    font-size: 1.1rem;
+  }
+
+  .mdx-content figure {
+    border-radius: 0.85rem;
+  }
+}
