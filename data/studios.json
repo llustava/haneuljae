@@ -1,0 +1,132 @@
+[
+  {
+    "slug": "aurora-lens",
+    "name": "Aurora Lens",
+    "tagline": "Polar field studio",
+    "summary": "빙설 원정과 실시간 내러티브를 결합해 드론·레이더·인터렉션 로그를 하나의 MDX 노트로 묶는 북극권 필드 스튜디오입니다.",
+    "category": "FIELD DOCS",
+    "accent": "from-sky-400/70 to-cyan-300/70",
+    "logo": "/logos/aurora.svg",
+    "bannerMessage": "빙설 로케이션 생중계 : 팀 피드백 루프 7분 → 90초"
+  },
+  {
+    "slug": "solstice-market",
+    "name": "Solstice Market",
+    "tagline": "Traveling sensory shop",
+    "summary": "계절형 팝업과 투어링 마켓을 동시에 설계해 관람자 피드백을 즉시 반영하는 이동형 리테일 실험실입니다.",
+    "category": "POP-UP",
+    "accent": "from-amber-300/80 to-orange-500/60",
+    "logo": "/logos/solstice.svg",
+    "bannerMessage": "계절형 팝업 설계 키트 무료 배포 중"
+  },
+  {
+    "slug": "nebula-lab",
+    "name": "Nebula Lab",
+    "tagline": "Sensorial data theater",
+    "summary": "도시 센서 데이터를 냄새·빛·소리로 재구성해 몰입형 데이터 시어터를 만드는 실험실입니다.",
+    "category": "DATA SPACE",
+    "accent": "from-fuchsia-400/70 to-indigo-500/60",
+    "logo": "/logos/nebula.svg",
+    "bannerMessage": "데이터 시어터 가이드라인 실시간 Q&A"
+  },
+  {
+    "slug": "tidal-forge",
+    "name": "Tidal Forge",
+    "tagline": "Littoral wave foundry",
+    "summary": "조석 흐름을 실시간 시각화해 파동 데이터를 디자인 모듈로 바꾸는 해양형 스튜디오입니다.",
+    "category": "TIDAL LAB",
+    "accent": "from-cyan-500/70 to-blue-600/60",
+    "logo": "/logos/tidal-forge.svg",
+    "bannerMessage": "조석 파동 보드 실험, 오늘 16시 스트리밍"
+  },
+  {
+    "slug": "lumen-bay",
+    "name": "Lumen Bay",
+    "tagline": "Urban light archivist",
+    "summary": "도심광 채집 프로토콜로 브랜드 라이팅 라이브러리를 만드는 광 데이터 실험실입니다.",
+    "category": "URBAN LIGHT",
+    "accent": "from-yellow-200/70 to-lime-400/60",
+    "logo": "/logos/lumen-bay.svg",
+    "bannerMessage": "도심광 캡처 프리셋 베타 액세스 오픈"
+  },
+  {
+    "slug": "ember-harbor",
+    "name": "Ember Harbor",
+    "tagline": "Harbor scent theater",
+    "summary": "폐선 창고를 개조해 향·사운드·빛을 겹쳐 항만 내러티브를 재현하는 향기 극장입니다.",
+    "category": "SENSE STAGE",
+    "accent": "from-rose-400/70 to-orange-400/60",
+    "logo": "/logos/ember-harbor.svg",
+    "bannerMessage": "항만 향기 극장 신작 프리뷰 티켓 오픈"
+  },
+  {
+    "slug": "zenith-orchard",
+    "name": "Zenith Orchard",
+    "tagline": "Vertical climate gallery",
+    "summary": "고층 온실을 미디어 갤러리로 전환해 기상 데이터를 감각 카드로 만드는 연구소입니다.",
+    "category": "CLIMATE MEDIA",
+    "accent": "from-emerald-300/70 to-teal-500/60",
+    "logo": "/logos/zenith-orchard.svg",
+    "bannerMessage": "고층 온실 인터랙션 레지던시 2기 모집"
+  },
+  {
+    "slug": "monsoon-vault",
+    "name": "Monsoon Vault",
+    "tagline": "Tropical downpour lab",
+    "summary": "열대 폭우의 패턴을 다채널 사운드와 레이더 그래픽으로 기록하는 이동식 연구소입니다.",
+    "category": "CLIMATE AUDIO",
+    "accent": "from-blue-500/70 to-indigo-600/60",
+    "logo": "/logos/monsoon-vault.svg",
+    "bannerMessage": "폭우 데이터 워크숍 월드 투어 대기 중"
+  },
+  {
+    "slug": "prisma-drift",
+    "name": "Prisma Drift",
+    "tagline": "Mobile spectrum studio",
+    "summary": "프리즘 돔 차량으로 도시 빛을 분광해 즉시 팔레트를 공유하는 이동식 스펙트럼 랩입니다.",
+    "category": "COLOR OPS",
+    "accent": "from-purple-400/70 to-pink-500/60",
+    "logo": "/logos/prisma-drift.svg",
+    "bannerMessage": "이동식 프리즘 주행이 오늘 21시에 출발"
+  },
+  {
+    "slug": "chrono-dunes",
+    "name": "Chrono Dunes",
+    "tagline": "Temporal desert studio",
+    "summary": "사막 모래 이동을 시간 단위로 기록해 증강현실 전시에 반영하는 시간 기반 설치팀입니다.",
+    "category": "GEOMEDIA",
+    "accent": "from-amber-200/80 to-stone-400/60",
+    "logo": "/logos/chrono-dunes.svg",
+    "bannerMessage": "사막 모래 시간지도 베타 공개"
+  },
+  {
+    "slug": "delta-forum",
+    "name": "Delta Forum",
+    "tagline": "Estuary archive club",
+    "summary": "강 하구의 생활 데이터와 인터뷰를 다층 전시로 엮는 커뮤니티 플랫폼입니다.",
+    "category": "CIVIC STREAM",
+    "accent": "from-cyan-400/70 to-emerald-400/60",
+    "logo": "/logos/delta-forum.svg",
+    "bannerMessage": "하구 아카이브 포럼 라이브 세션 진행 중"
+  },
+  {
+    "slug": "sierra-hatch",
+    "name": "Sierra Hatch",
+    "tagline": "Alpine field camp",
+    "summary": "고도별 캠프를 순회하며 기압·빛·사운드를 재현하는 야외 실험실 네트워크입니다.",
+    "category": "ALTITUDE OPS",
+    "accent": "from-sky-300/80 to-blue-500/60",
+    "logo": "/logos/sierra-hatch.svg",
+    "bannerMessage": "고산 캠프 감마 루트 오늘 오픈"
+  },
+  {
+    "slug": "quiet-orbit",
+    "name": "Quiet Orbit",
+    "tagline": "Civic observatory",
+    "summary": "도심 옥상 관측소를 통해 빛과 소리를 동시에 수집하는 사운드·빛 연구 클럽입니다.",
+    "category": "NIGHT STUDIO",
+    "accent": "from-indigo-500/70 to-slate-500/60",
+    "logo": "/logos/quiet-orbit.svg",
+    "bannerMessage": "도심 관측 세션이 새벽 2시에 시작됩니다"
+  }
+]

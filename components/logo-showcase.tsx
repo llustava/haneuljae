@@ -1,49 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 
-import AuroraLens from "@/content/aurora-lens.mdx";
-import SolsticeMarket from "@/content/solstice-market.mdx";
-import NebulaLab from "@/content/nebula-lab.mdx";
+import { studios } from "@/lib/studios";
 import VotePanel from "@/components/vote-panel";
 import CommentPanel from "@/components/comment-panel";
-
-const studios = [
-  {
-    slug: "aurora-lens",
-    name: "Aurora Lens",
-    tagline: "Polar field studio",
-    summary:
-      "빙설 원정과 실시간 내러티브를 결합한 필드 스튜디오. 드론, 레이더, 인터렉션 로그를 하나의 MDX 노트로 묶어 팀과 공유합니다.",
-    category: "FIELD DOCS",
-    accent: "from-sky-400/70 to-cyan-300/70",
-    logo: "/logos/aurora.svg",
-    Content: AuroraLens,
-  },
-  {
-    slug: "solstice-market",
-    name: "Solstice Market",
-    tagline: "Traveling sensory shop",
-    summary:
-      "계절형 팝업과 투어링 마켓을 동시에 설계해 관람객 피드백을 즉각 반영합니다. 현장에서 큐레이션 노트를 스트리밍합니다.",
-    category: "POP-UP",
-    accent: "from-amber-300/80 to-orange-500/60",
-    logo: "/logos/solstice.svg",
-    Content: SolsticeMarket,
-  },
-  {
-    slug: "nebula-lab",
-    name: "Nebula Lab",
-    tagline: "Sensorial data theater",
-    summary:
-      "도시 센서 데이터를 전시 환경으로 전환하는 실험실. 냄새, 빛, 소리를 데이터 인터페이스에 맞춰 재구성합니다.",
-    category: "DATA SPACE",
-    accent: "from-fuchsia-400/70 to-indigo-500/60",
-    logo: "/logos/nebula.svg",
-    Content: NebulaLab,
-  },
-];
 
 const isValidStudioSlug = (slug: string | undefined): slug is string =>
   Boolean(slug && studios.some((studio) => studio.slug === slug));
@@ -85,8 +47,12 @@ export default function LogoShowcase() {
     () => studios[0].slug
   );
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const logoRailRef = useRef<HTMLDivElement | null>(null);
 
-  const activeStudio = useMemo(() => studios.find((studio) => studio.slug === activeSlug)!, [activeSlug]);
+  const activeStudio = useMemo(
+    () => studios.find((studio) => studio.slug === activeSlug) ?? studios[0],
+    [activeSlug]
+  );
   const Content = activeStudio.Content;
 
   useEffect(() => {
@@ -110,6 +76,65 @@ export default function LogoShowcase() {
     };
   }, []);
 
+  useEffect(() => {
+    const rail = logoRailRef.current;
+    if (!rail) {
+      return undefined;
+    }
+
+    let isPointerDown = false;
+    let startX = 0;
+    let scrollStart = 0;
+    let pointerId: number | null = null;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      isPointerDown = true;
+      startX = event.clientX;
+      scrollStart = rail.scrollLeft;
+      pointerId = event.pointerId;
+      rail.style.cursor = "grabbing";
+      rail.style.userSelect = "none";
+      rail.setPointerCapture(pointerId);
+    };
+
+    const handlePointerMove = (event: PointerEvent) => {
+      if (!isPointerDown) {
+        return;
+      }
+      event.preventDefault();
+      rail.scrollLeft = scrollStart - (event.clientX - startX);
+    };
+
+    const handlePointerUp = () => {
+      if (!isPointerDown) {
+        return;
+      }
+      isPointerDown = false;
+      rail.style.cursor = "";
+      rail.style.userSelect = "";
+      if (pointerId !== null) {
+        try {
+          rail.releasePointerCapture(pointerId);
+        } catch {
+          // ignore pointer release failures
+        }
+        pointerId = null;
+      }
+    };
+
+    rail.addEventListener("pointerdown", handlePointerDown);
+    rail.addEventListener("pointermove", handlePointerMove);
+    rail.addEventListener("pointerleave", handlePointerUp);
+    window.addEventListener("pointerup", handlePointerUp);
+
+    return () => {
+      rail.removeEventListener("pointerdown", handlePointerDown);
+      rail.removeEventListener("pointermove", handlePointerMove);
+      rail.removeEventListener("pointerleave", handlePointerUp);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, []);
+
   const updateGlobalSlug = (nextSlug: string) => {
     if (!isValidStudioSlug(nextSlug) || typeof window === "undefined") {
       return;
@@ -125,10 +150,55 @@ export default function LogoShowcase() {
 
   return (
     <section id="logo-showcase" className="flex w-full flex-col gap-8">
+      <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-4 shadow-[0_25px_70px_rgba(15,23,42,0.6)]">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-xs uppercase tracking-[0.4em] text-white/40">studio tabs</p>
+          <span className="text-[0.65rem] uppercase tracking-[0.3em] text-white/40">
+            drag to explore
+          </span>
+        </div>
+        <div
+          ref={logoRailRef}
+          className="no-scrollbar flex gap-3 overflow-x-auto rounded-2xl border border-white/5 bg-white/5 px-3 py-3 text-sm text-white/80 touch-pan-x cursor-grab"
+          aria-label="스튜디오 목록"
+        >
+          {studios.map((studio) => {
+            const isActive = studio.slug === activeSlug;
+            return (
+              <button
+                key={`rail-${studio.slug}`}
+                type="button"
+                onClick={() => updateGlobalSlug(studio.slug)}
+                aria-pressed={isActive}
+                className={`flex min-w-[11rem] flex-shrink-0 items-center gap-3 rounded-2xl border px-4 py-2 text-left transition ${
+                  isActive
+                    ? "border-white/80 bg-white/20 text-white"
+                    : "border-white/10 text-white/70 hover:border-white/40"
+                }`}
+              >
+                <span className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br ${studio.accent}`}>
+                  <Image
+                    src={studio.logo}
+                    alt=""
+                    aria-hidden="true"
+                    width={36}
+                    height={36}
+                    className="h-7 w-7"
+                  />
+                </span>
+                <span className="flex flex-col">
+                  <strong className="text-sm font-semibold leading-tight text-white">{studio.name}</strong>
+                  <span className="text-xs text-white/60">{studio.tagline}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
       <div className="relative flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60 shadow-[0_35px_120px_rgba(15,23,42,0.7)] lg:min-h-[32rem] lg:flex-row">
         <aside
-          className={`relative flex flex-col border-b border-white/5 bg-slate-950/60 transition-all duration-500 lg:border-b-0 lg:border-r ${
-            sidebarOpen ? "w-full lg:w-80" : "w-full lg:w-24"
+          className={`relative hidden flex-col border-b border-white/5 bg-slate-950/60 transition-all duration-500 lg:flex lg:border-b-0 lg:border-r ${
+            sidebarOpen ? "lg:w-80" : "lg:w-24"
           }`}
         >
           <div className="flex items-center justify-between px-4 py-4 sm:px-5 sm:py-6">

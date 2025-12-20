@@ -30,7 +30,7 @@ export default function SiteFooter() {
           </div>
         </div>
         <div className="flex flex-col gap-2 rounded-3xl border border-white/10 bg-white/[0.03] px-6 py-5 text-sm text-white/70 sm:flex-row sm:items-center sm:justify-between">
-          <p>Special Thanks to BSAu_star (J. H. Yun), fracpa (M. S. Kim)</p>
+          <p>Special Thanks to BSAu_star (J. H. Yoon), fracpa (M. S. Kim)</p>
           <p className="text-white/50">© 2025 llustava. All rights reserved.</p>
         </div>
       </div>

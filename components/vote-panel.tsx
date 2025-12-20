@@ -5,6 +5,7 @@ import { onAuthStateChanged, signInWithPopup, signOut, User } from "firebase/aut
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   onSnapshot,
@@ -52,6 +53,8 @@ export default function VotePanel({ slug, title }: VotePanelProps) {
   );
   const [visibleList, setVisibleList] = useState<VoteChoice | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userChoice, setUserChoice] = useState<VoteChoice | null>(null);
+  const [userVoteId, setUserVoteId] = useState<string | null>(null);
   const blockUnsubscribeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -121,7 +124,7 @@ export default function VotePanel({ slug, title }: VotePanelProps) {
   }, [client]);
 
   useEffect(() => {
-    if (!client) {
+    if (!client || !user) {
       return undefined;
     }
 
@@ -184,10 +187,19 @@ export default function VotePanel({ slug, title }: VotePanelProps) {
 
       setCounts({ up: upEntries.length, down: downEntries.length });
       setEntriesByChoice({ up: upEntries, down: downEntries });
+
+      if (user?.uid) {
+        const myEntry = latestByUser.get(user.uid);
+        setUserChoice(myEntry?.choice ?? null);
+        setUserVoteId(myEntry?.id ?? null);
+      } else {
+        setUserChoice(null);
+        setUserVoteId(null);
+      }
     });
 
     return unsubscribe;
-  }, [client, slug]);
+  }, [client, slug, user?.uid]);
 
   const totalVotes = counts.up + counts.down;
   const approval = totalVotes === 0 ? 0 : Math.round((counts.up / totalVotes) * 100);
@@ -202,8 +214,32 @@ export default function VotePanel({ slug, title }: VotePanelProps) {
       : `${100 - approval}%가 개선을 제안했습니다`;
   }, [approval, totalVotes]);
 
+  const removeVote = async () => {
+    if (!client || !user || !userVoteId) {
+      setClientError("취소할 투표를 찾을 수 없습니다.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      await deleteDoc(doc(client.db, "logoVotes", userVoteId));
+      setClientError(null);
+    } catch (error) {
+      console.error("투표 삭제 실패", error);
+      setClientError("투표를 취소하는 중 오류가 발생했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleVote = async (choice: VoteChoice) => {
     if (!client || !user) {
+      return;
+    }
+
+    if (userChoice === choice) {
+      await removeVote();
       return;
     }
 
@@ -280,6 +316,19 @@ export default function VotePanel({ slug, title }: VotePanelProps) {
     setVisibleList((current) => (current === choice ? null : choice));
   };
 
+  const isUpSelected = userChoice === "up";
+  const isDownSelected = userChoice === "down";
+
+  useEffect(() => {
+    if (!user) {
+      setUserChoice(null);
+      setUserVoteId(null);
+      setCounts({ up: 0, down: 0 });
+      setEntriesByChoice({ up: [], down: [] });
+      setVisibleList(null);
+    }
+  }, [user]);
+
   return (
     <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-6 shadow-2xl">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -323,7 +372,12 @@ export default function VotePanel({ slug, title }: VotePanelProps) {
               <button
                 disabled={!user || isSubmitting}
                 onClick={() => handleVote("up")}
-                className="flex flex-1 items-center justify-between rounded-2xl bg-emerald-500/20 px-5 py-4 text-left text-white transition hover:bg-emerald-400/30 disabled:cursor-not-allowed disabled:opacity-50"
+                aria-pressed={isUpSelected}
+                className={`flex flex-1 items-center justify-between rounded-2xl px-5 py-4 text-left text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                  isUpSelected
+                    ? "bg-emerald-400/40 ring-2 ring-emerald-200/70"
+                    : "bg-emerald-500/20 hover:bg-emerald-400/30"
+                }`}
               >
                 <span>
                   <strong className="text-3xl font-semibold text-white">{counts.up}</strong>
@@ -347,7 +401,12 @@ export default function VotePanel({ slug, title }: VotePanelProps) {
               <button
                 disabled={!user || isSubmitting}
                 onClick={() => handleVote("down")}
-                className="flex flex-1 items-center justify-between rounded-2xl bg-rose-500/20 px-5 py-4 text-left text-white transition hover:bg-rose-400/30 disabled:cursor-not-allowed disabled:opacity-50"
+                aria-pressed={isDownSelected}
+                className={`flex flex-1 items-center justify-between rounded-2xl px-5 py-4 text-left text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                  isDownSelected
+                    ? "bg-rose-400/40 ring-2 ring-rose-100/70"
+                    : "bg-rose-500/20 hover:bg-rose-400/30"
+                }`}
               >
                 <span>
                   <strong className="text-3xl font-semibold text-white">{counts.down}</strong>
