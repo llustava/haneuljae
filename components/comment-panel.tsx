@@ -1,39 +1,31 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { onAuthStateChanged, signInWithPopup, signOut, User } from "firebase/auth";
 import {
   addDoc,
   collection,
+  getDoc,
   doc,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
+  setDoc,
   Timestamp,
   updateDoc,
   where,
 } from "firebase/firestore";
 import type { FirebaseClient } from "@/lib/firebase/client";
 import { getFirebaseClient } from "@/lib/firebase/client";
-
-const allowedDomainRaw =
-  process.env.NEXT_PUBLIC_FIREBASE_ALLOWED_DOMAIN ??
-  process.env.NEXT_PUBLIC_ALLOWED_DOMAIN ??
-  process.env.NEXT_PUBLIC_FIREBASE_API_KEY_ALLOWED_DOMAIN ??
-  "";
-
-const normalizedAllowedDomain = allowedDomainRaw?.trim().toLowerCase();
-
-const isEmailAllowed = (email?: string | null) => {
-  if (!normalizedAllowedDomain) {
-    return true;
-  }
-
-  return email?.toLowerCase().endsWith(normalizedAllowedDomain) ?? false;
-};
-
-const domainErrorText = "올바른 도메인을 가진 이메일로 로그인 해 주세요.";
+import {
+  BLOCK_COLLECTION,
+  BLOCK_ERROR_MESSAGE,
+  domainErrorMessage,
+  isAdminEmail,
+  isEmailAllowed,
+  shouldEnforceDomain,
+} from "@/lib/auth/policies";
 
 const formatTimestamp = (value?: Timestamp | null) => {
   if (!value) {
@@ -55,6 +47,7 @@ type CommentEntry = {
   id: string;
   userId: string;
   displayName: string;
+  email: string | null;
   body: string;
   parentId: string | null;
   createdAt?: Timestamp | null;
@@ -76,11 +69,10 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [replySubmittingId, setReplySubmittingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [blockingUserId, setBlockingUserId] = useState<string | null>(null);
+  const blockUnsubscribeRef = useRef<(() => void) | null>(null);
 
-  const shouldEnforceDomain = Boolean(normalizedAllowedDomain);
-  const domainErrorMessage = shouldEnforceDomain
-    ? `${domainErrorText}${normalizedAllowedDomain ? ` (${normalizedAllowedDomain})` : ""}`
-    : domainErrorText;
+  const isAdmin = isAdminEmail(user?.email);
 
   useEffect(() => {
     try {
@@ -97,7 +89,16 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
       return undefined;
     }
 
+    const cleanupBlockListener = () => {
+      if (blockUnsubscribeRef.current) {
+        blockUnsubscribeRef.current();
+        blockUnsubscribeRef.current = null;
+      }
+    };
+
     const unsubscribe = onAuthStateChanged(client.auth, async (nextUser) => {
+      cleanupBlockListener();
+
       if (!nextUser) {
         setUser(null);
         return;
@@ -110,12 +111,32 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
         return;
       }
 
+      const blockRef = doc(client.db, BLOCK_COLLECTION, nextUser.uid);
+      const blockSnapshot = await getDoc(blockRef);
+      if (blockSnapshot.exists()) {
+        setClientError(BLOCK_ERROR_MESSAGE);
+        setUser(null);
+        await signOut(client.auth);
+        return;
+      }
+
+      blockUnsubscribeRef.current = onSnapshot(blockRef, (blockDoc) => {
+        if (!blockDoc.exists()) {
+          return;
+        }
+        setClientError(BLOCK_ERROR_MESSAGE);
+        signOut(client.auth);
+      });
+
       setClientError(null);
       setUser(nextUser);
     });
 
-    return unsubscribe;
-  }, [client, domainErrorMessage, shouldEnforceDomain]);
+    return () => {
+      unsubscribe();
+      cleanupBlockListener();
+    };
+  }, [client]);
 
   useEffect(() => {
     if (!client) {
@@ -135,6 +156,7 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
           body?: string;
           parentId?: string | null;
           userId?: string;
+          email?: string | null;
           createdAt?: Timestamp | null;
           isDeleted?: boolean;
         };
@@ -143,6 +165,7 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
           id: docSnapshot.id,
           userId: data.userId ?? "",
           displayName: data.displayName ?? "익명",
+          email: data.email ?? null,
           body: data.body ?? "",
           parentId: data.parentId ?? null,
           createdAt: data.createdAt ?? null,
@@ -184,6 +207,7 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
         slug,
         userId: user.uid,
         displayName: user.displayName ?? user.email ?? "익명",
+        email: user.email ?? null,
         body: trimmed,
         parentId: null,
         createdAt: serverTimestamp(),
@@ -227,6 +251,7 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
         slug,
         userId: user.uid,
         displayName: user.displayName ?? user.email ?? "익명",
+        email: user.email ?? null,
         body: trimmed,
         parentId,
         createdAt: serverTimestamp(),
@@ -248,7 +273,7 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
       return;
     }
 
-    if (comment.userId !== user.uid || comment.isDeleted) {
+    if ((!isAdmin && comment.userId !== user.uid) || comment.isDeleted) {
       return;
     }
 
@@ -269,6 +294,40 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
     }
   };
 
+  const handleBlockUser = async (entry: CommentEntry) => {
+    if (!client || !isAdmin || !entry.userId) {
+      return;
+    }
+
+    const reasonInput =
+      typeof window === "undefined"
+        ? "관리자 차단"
+        : window.prompt("차단 사유를 입력하세요", "커뮤니티 정책 위반") ?? "";
+
+    setBlockingUserId(entry.userId);
+
+    try {
+      await setDoc(doc(client.db, BLOCK_COLLECTION, entry.userId), {
+        userId: entry.userId,
+        displayName: entry.displayName,
+        email: entry.email ?? null,
+        reason: reasonInput.trim() || "관리자 차단",
+        blockedBy: user?.uid ?? "admin",
+        blockedByEmail: user?.email ?? null,
+        createdAt: serverTimestamp(),
+      });
+      if (typeof window !== "undefined") {
+        window.alert(`${entry.displayName} 계정을 차단했습니다.`);
+      }
+      setClientError(null);
+    } catch (error) {
+      console.error("계정 차단 실패", error);
+      setClientError("계정 차단 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setBlockingUserId(null);
+    }
+  };
+
   const handleLogin = async () => {
     if (!client) {
       return;
@@ -279,6 +338,13 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
 
       if (shouldEnforceDomain && !isEmailAllowed(credential.user.email)) {
         setClientError(domainErrorMessage);
+        await signOut(client.auth);
+        return;
+      }
+
+      const blockDoc = await getDoc(doc(client.db, BLOCK_COLLECTION, credential.user.uid));
+      if (blockDoc.exists()) {
+        setClientError(BLOCK_ERROR_MESSAGE);
         await signOut(client.auth);
         return;
       }
@@ -400,7 +466,7 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
                     대댓글 불가
                   </span>
                 )}
-                {user?.uid === thread.userId && !thread.isDeleted ? (
+                {(isAdmin || user?.uid === thread.userId) && !thread.isDeleted ? (
                   <button
                     type="button"
                     onClick={() => handleDelete(thread)}
@@ -408,6 +474,16 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
                     className="rounded-full border border-white/20 px-3 py-1 text-white/70 transition hover:border-white hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {deletingId === thread.id ? "삭제 중..." : "삭제"}
+                  </button>
+                ) : null}
+                {isAdmin && !thread.isDeleted && thread.userId !== user?.uid ? (
+                  <button
+                    type="button"
+                    onClick={() => handleBlockUser(thread)}
+                    disabled={blockingUserId === thread.userId}
+                    className="rounded-full border border-rose-400/40 px-3 py-1 text-white/80 transition hover:border-rose-300 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {blockingUserId === thread.userId ? "차단 중..." : "계정 차단"}
                   </button>
                 ) : null}
                 <span className="text-white/30">·</span>
@@ -454,7 +530,7 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
                         >
                           {reply.displayName}
                         </p>
-                        {user?.uid === reply.userId && !reply.isDeleted ? (
+                        {(isAdmin || user?.uid === reply.userId) && !reply.isDeleted ? (
                           <button
                             type="button"
                             onClick={() => handleDelete(reply)}
@@ -462,6 +538,16 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
                             className="text-xs text-white/70 underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             {deletingId === reply.id ? "삭제 중..." : "삭제"}
+                          </button>
+                        ) : null}
+                        {isAdmin && !reply.isDeleted && reply.userId !== user?.uid ? (
+                          <button
+                            type="button"
+                            onClick={() => handleBlockUser(reply)}
+                            disabled={blockingUserId === reply.userId}
+                            className="text-xs text-rose-200 underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {blockingUserId === reply.userId ? "차단 중..." : "계정 차단"}
                           </button>
                         ) : null}
                       </div>

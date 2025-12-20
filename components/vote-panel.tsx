@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { onAuthStateChanged, signInWithPopup, signOut, User } from "firebase/auth";
 import {
   addDoc,
   collection,
   doc,
+  getDoc,
   onSnapshot,
   query,
   serverTimestamp,
@@ -15,24 +16,13 @@ import {
 } from "firebase/firestore";
 import type { FirebaseClient } from "@/lib/firebase/client";
 import { getFirebaseClient } from "@/lib/firebase/client";
-
-const allowedDomainRaw =
-  process.env.NEXT_PUBLIC_FIREBASE_ALLOWED_DOMAIN ??
-  process.env.NEXT_PUBLIC_ALLOWED_DOMAIN ??
-  process.env.NEXT_PUBLIC_FIREBASE_API_KEY_ALLOWED_DOMAIN ??
-  "";
-
-const normalizedAllowedDomain = allowedDomainRaw?.trim().toLowerCase();
-
-const isEmailAllowed = (email?: string | null) => {
-  if (!normalizedAllowedDomain) {
-    return true;
-  }
-
-  return email?.toLowerCase().endsWith(normalizedAllowedDomain) ?? false;
-};
-
-const domainErrorText = "올바른 도메인을 가진 이메일로 로그인 해 주세요.";
+import {
+  BLOCK_COLLECTION,
+  BLOCK_ERROR_MESSAGE,
+  domainErrorMessage,
+  isEmailAllowed,
+  shouldEnforceDomain,
+} from "@/lib/auth/policies";
 
 type VotePanelProps = {
   slug: string;
@@ -49,31 +39,27 @@ type VoteEntry = {
   updatedAt?: Timestamp | null;
 };
 
-
 export default function VotePanel({ slug, title }: VotePanelProps) {
   const [client, setClient] = useState<FirebaseClient | null>(null);
   const [clientError, setClientError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [counts, setCounts] = useState({ up: 0, down: 0 });
-  const [entriesByChoice, setEntriesByChoice] = useState<{ up: VoteEntry[]; down: VoteEntry[] }>({
-    up: [],
-    down: [],
-  });
+  const [entriesByChoice, setEntriesByChoice] = useState<{ up: VoteEntry[]; down: VoteEntry[] }>(
+    {
+      up: [],
+      down: [],
+    }
+  );
   const [visibleList, setVisibleList] = useState<VoteChoice | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const shouldEnforceDomain = Boolean(normalizedAllowedDomain);
-  const domainErrorMessage = shouldEnforceDomain
-    ? `${domainErrorText}${normalizedAllowedDomain ? ` (${normalizedAllowedDomain})` : ""}`
-    : domainErrorText;
+  const blockUnsubscribeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     try {
       setClient(getFirebaseClient());
     } catch (error) {
       setClientError(
-        error instanceof Error
-          ? error.message
-          : "Firebase 구성이 필요합니다."
+        error instanceof Error ? error.message : "Firebase 구성이 필요합니다."
       );
     }
   }, []);
@@ -83,7 +69,16 @@ export default function VotePanel({ slug, title }: VotePanelProps) {
       return undefined;
     }
 
+    const cleanupBlockListener = () => {
+      if (blockUnsubscribeRef.current) {
+        blockUnsubscribeRef.current();
+        blockUnsubscribeRef.current = null;
+      }
+    };
+
     const unsubscribe = onAuthStateChanged(client.auth, async (nextUser) => {
+      cleanupBlockListener();
+
       if (!nextUser) {
         setUser(null);
         return;
@@ -96,22 +91,39 @@ export default function VotePanel({ slug, title }: VotePanelProps) {
         return;
       }
 
+      const blockRef = doc(client.db, BLOCK_COLLECTION, nextUser.uid);
+      const blockSnapshot = await getDoc(blockRef);
+      if (blockSnapshot.exists()) {
+        setClientError(BLOCK_ERROR_MESSAGE);
+        setUser(null);
+        await signOut(client.auth);
+        return;
+      }
+
+      blockUnsubscribeRef.current = onSnapshot(blockRef, (blockDoc) => {
+        if (!blockDoc.exists()) {
+          return;
+        }
+        setClientError(BLOCK_ERROR_MESSAGE);
+        signOut(client.auth);
+      });
+
       setClientError(null);
       setUser(nextUser);
     });
 
-    return unsubscribe;
-  }, [client, domainErrorMessage, shouldEnforceDomain]);
+    return () => {
+      unsubscribe();
+      cleanupBlockListener();
+    };
+  }, [client]);
 
   useEffect(() => {
     if (!client) {
       return undefined;
     }
 
-    const votesQuery = query(
-      collection(client.db, "logoVotes"),
-      where("slug", "==", slug)
-    );
+    const votesQuery = query(collection(client.db, "logoVotes"), where("slug", "==", slug));
 
     const unsubscribe = onSnapshot(votesQuery, (snapshot) => {
       const latestByUser = new Map<string, VoteEntry>();
@@ -236,6 +248,13 @@ export default function VotePanel({ slug, title }: VotePanelProps) {
 
       if (shouldEnforceDomain && !isEmailAllowed(credential.user.email)) {
         setClientError(domainErrorMessage);
+        await signOut(client.auth);
+        return;
+      }
+
+      const blockDoc = await getDoc(doc(client.db, BLOCK_COLLECTION, credential.user.uid));
+      if (blockDoc.exists()) {
+        setClientError(BLOCK_ERROR_MESSAGE);
         await signOut(client.auth);
         return;
       }

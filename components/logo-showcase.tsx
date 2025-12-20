@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 
 import AuroraLens from "@/content/aurora-lens.mdx";
@@ -45,15 +45,86 @@ const studios = [
   },
 ];
 
+const isValidStudioSlug = (slug: string | undefined): slug is string =>
+  Boolean(slug && studios.some((studio) => studio.slug === slug));
+
+const getHashSlugSnapshot = () => {
+  if (typeof window === "undefined") {
+    return studios[0].slug;
+  }
+
+  const hash = window.location.hash.replace("#", "");
+  return isValidStudioSlug(hash) ? hash : studios[0].slug;
+};
+
+const subscribeToStudioSlug = (onStoreChange: () => void) => {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const handleStudioSelect = (event: Event) => {
+    const detail = (event as CustomEvent<string | undefined>).detail;
+    if (isValidStudioSlug(detail)) {
+      onStoreChange();
+    }
+  };
+
+  window.addEventListener("hashchange", onStoreChange);
+  window.addEventListener("studio:select", handleStudioSelect);
+
+  return () => {
+    window.removeEventListener("hashchange", onStoreChange);
+    window.removeEventListener("studio:select", handleStudioSelect);
+  };
+};
+
 export default function LogoShowcase() {
-  const [activeSlug, setActiveSlug] = useState(studios[0].slug);
+  const activeSlug = useSyncExternalStore(
+    subscribeToStudioSlug,
+    getHashSlugSnapshot,
+    () => studios[0].slug
+  );
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const activeStudio = useMemo(() => studios.find((studio) => studio.slug === activeSlug)!, [activeSlug]);
   const Content = activeStudio.Content;
 
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const handleStudioSelect = (event: Event) => {
+      const detail = (event as CustomEvent<string | undefined>).detail;
+      if (!isValidStudioSlug(detail)) {
+        return;
+      }
+
+      setSidebarOpen(true);
+    };
+
+    window.addEventListener("studio:select", handleStudioSelect);
+
+    return () => {
+      window.removeEventListener("studio:select", handleStudioSelect);
+    };
+  }, []);
+
+  const updateGlobalSlug = (nextSlug: string) => {
+    if (!isValidStudioSlug(nextSlug) || typeof window === "undefined") {
+      return;
+    }
+
+    setSidebarOpen(true);
+
+    const nextUrl = new URL(window.location.href);
+    nextUrl.hash = nextSlug;
+    window.history.replaceState(null, "", nextUrl);
+    window.dispatchEvent(new CustomEvent("studio:select", { detail: nextSlug }));
+  };
+
   return (
-    <section className="flex w-full flex-col gap-8">
+    <section id="logo-showcase" className="flex w-full flex-col gap-8">
       <div className="relative flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60 shadow-[0_35px_120px_rgba(15,23,42,0.7)] lg:min-h-[32rem] lg:flex-row">
         <aside
           className={`relative flex flex-col border-b border-white/5 bg-slate-950/60 transition-all duration-500 lg:border-b-0 lg:border-r ${
@@ -85,7 +156,7 @@ export default function LogoShowcase() {
               return (
                 <button
                   key={studio.slug}
-                  onClick={() => setActiveSlug(studio.slug)}
+                  onClick={() => updateGlobalSlug(studio.slug)}
                   className={`flex items-center gap-4 rounded-2xl px-3 py-2 text-left transition ${
                     isActive ? "bg-white/10" : "hover:bg-white/5"
                   }`}
