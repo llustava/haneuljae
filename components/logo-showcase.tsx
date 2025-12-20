@@ -177,8 +177,8 @@ export default function LogoShowcase() {
   };
 
   return (
-    <section id="logo-showcase" className="flex w-full flex-col gap-8">
-      <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-4 shadow-[0_25px_70px_rgba(15,23,42,0.6)]">
+    <section id="logo-showcase" className="flex w-full flex-col gap-6 sm:gap-8 lg:gap-10">
+      <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-4 shadow-[0_25px_70px_rgba(15,23,42,0.6)] sm:p-5 lg:p-6">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-xs uppercase tracking-[0.4em] text-white/40">studio tabs</p>
           <span className="text-[0.65rem] uppercase tracking-[0.3em] text-white/40">

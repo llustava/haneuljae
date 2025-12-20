@@ -36,6 +36,16 @@ body {
   display: none;
 }
 
+.app-shell {
+  padding: 12px;
+}
+
+@media (min-width: 768px) {
+  .app-shell {
+    padding: 32px;
+  }
+}
+
 .mdx-content {
   display: flex;
   flex-direction: column;

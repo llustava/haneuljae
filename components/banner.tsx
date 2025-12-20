@@ -86,6 +86,7 @@ export default function ExperienceBanner() {
   const [shouldAnimateTicker, setShouldAnimateTicker] = useState(false);
   const messageViewportRef = useRef<HTMLDivElement | null>(null);
   const messageMeasureRef = useRef<HTMLSpanElement | null>(null);
+  const bannerUnsubscribeRef = useRef<(() => void) | null>(null);
 
   const bannerData = queue;
   const bannerCount = bannerData.length;
@@ -103,17 +104,29 @@ export default function ExperienceBanner() {
 
   useEffect(() => {
     if (!client) {
+      setQueue([]);
       return undefined;
     }
 
+    const cleanupBannerListener = () => {
+      if (bannerUnsubscribeRef.current) {
+        bannerUnsubscribeRef.current();
+        bannerUnsubscribeRef.current = null;
+      }
+    };
+
     const unsubscribe = onAuthStateChanged(client.auth, async (nextUser) => {
+      cleanupBannerListener();
+
       if (!nextUser) {
         setUser(null);
+        setQueue([]);
         return;
       }
 
       if (shouldEnforceDomain && !isEmailAllowed(nextUser.email)) {
         setAuthError(genericDomainRejectMessage);
+        setUser(null);
         await signOut(client.auth);
         return;
       }
@@ -122,46 +135,41 @@ export default function ExperienceBanner() {
       if (blockDoc.exists()) {
         const blockData = blockDoc.data() as { reason?: string } | undefined;
         setAuthError(formatBlockMessage(blockData?.reason));
+        setUser(null);
         await signOut(client.auth);
         return;
       }
 
       setAuthError(null);
       setUser(nextUser);
-    });
 
-    return unsubscribe;
-  }, [client]);
+      const bannerQuery = query(collection(client.db, "banners"), orderBy("order", "asc"));
+      bannerUnsubscribeRef.current = onSnapshot(bannerQuery, (snapshot) => {
+        const remoteEntries: BannerMessage[] = snapshot.docs.map((docSnapshot, index) => {
+          const data = docSnapshot.data() as Partial<BannerMessage>;
+          return {
+            id: docSnapshot.id,
+            label: data.label ?? docSnapshot.id,
+            message: data.message ?? "",
+            slug: data.slug ?? docSnapshot.id,
+            order: data.order ?? index,
+          };
+        });
 
-  useEffect(() => {
-    if (!client) {
-      setQueue([]);
-      return undefined;
-    }
+        if (!remoteEntries.length) {
+          setQueue([]);
+          return;
+        }
 
-    const bannerQuery = query(collection(client.db, "banners"), orderBy("order", "asc"));
-    const unsubscribe = onSnapshot(bannerQuery, (snapshot) => {
-      const remoteEntries: BannerMessage[] = snapshot.docs.map((docSnapshot, index) => {
-        const data = docSnapshot.data() as Partial<BannerMessage>;
-        return {
-          id: docSnapshot.id,
-          label: data.label ?? docSnapshot.id,
-          message: data.message ?? "",
-          slug: data.slug ?? docSnapshot.id,
-          order: data.order ?? index,
-        };
+        remoteEntries.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        setQueue(remoteEntries);
       });
-
-      if (!remoteEntries.length) {
-        setQueue([]);
-        return;
-      }
-
-      remoteEntries.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-      setQueue(remoteEntries);
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      cleanupBannerListener();
+    };
   }, [client]);
 
   useEffect(() => {
@@ -348,7 +356,7 @@ export default function ExperienceBanner() {
   };
 
   return (
-    <div className="relative mb-6 overflow-hidden rounded-2xl border border-white/15 bg-white/5 p-3 text-white shadow-[0_12px_45px_rgba(15,23,42,0.45)]">
+    <div className="relative mb-6 overflow-hidden rounded-2xl border border-white/15 bg-white/5 p-4 text-white shadow-[0_12px_45px_rgba(15,23,42,0.45)] sm:p-5 lg:p-6">
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-3">
           <span className="rounded-full border border-white/20 px-3 py-1 text-[0.65rem] uppercase tracking-[0.4em] text-white/70">

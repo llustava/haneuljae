@@ -323,7 +323,7 @@ export default function VotePanel({ slug, title }: VotePanelProps) {
   const isDownSelected = userChoice === "down";
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-6 shadow-2xl">
+    <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-4 shadow-2xl sm:p-6 lg:p-8">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.4em] text-white/50">실명제 반응</p>
