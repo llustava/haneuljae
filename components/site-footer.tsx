@@ -9,12 +9,12 @@ export default function SiteFooter() {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-12 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-5 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
-          <p className="text-xs uppercase tracking-[0.4em] text-white/60">field transmissions</p>
+          <p className="text-xs uppercase tracking-[0.4em] text-white/60">external link</p>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h4 className="text-2xl font-semibold text-white">현장을 잇는 채널</h4>
+              <h4 className="text-2xl font-semibold text-white">라이브 및 실시간 정보 확인</h4>
               <p className="text-sm text-white/60">
-                실험 노트를 가장 먼저 전하는 인스타그램에서 비하인드를 만나보세요.
+                한어울제와 관련된 공지사항 및 행사를 가장 먼저 만나보세요.
               </p>
             </div>
             <Link
