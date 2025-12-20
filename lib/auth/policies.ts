@@ -14,6 +14,8 @@ export const domainErrorMessage = shouldEnforceDomain
   ? `올바른 도메인을 가진 이메일로 로그인 해 주세요.${normalizedAllowedDomain ? ` (${normalizedAllowedDomain})` : ""}`
   : "올바른 도메인을 가진 이메일로 로그인 해 주세요.";
 
+export const genericDomainRejectMessage = "허용되지 않은 계정입니다.";
+
 export const isEmailAllowed = (email?: string | null) => {
   if (!shouldEnforceDomain) {
     return true;

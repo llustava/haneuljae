@@ -7,10 +7,10 @@ import type { FirebaseClient } from "@/lib/firebase/client";
 import { getFirebaseClient } from "@/lib/firebase/client";
 import {
   BLOCK_COLLECTION,
-  domainErrorMessage,
   formatBlockMessage,
   isAdminEmail,
   isEmailAllowed,
+  genericDomainRejectMessage,
   shouldEnforceDomain,
 } from "@/lib/auth/policies";
 
@@ -85,7 +85,7 @@ export default function ExperienceBanner() {
       }
 
       if (shouldEnforceDomain && !isEmailAllowed(nextUser.email)) {
-        setAuthError(domainErrorMessage);
+        setAuthError(genericDomainRejectMessage);
         await signOut(client.auth);
         return;
       }
@@ -351,11 +351,6 @@ export default function ExperienceBanner() {
         </p>
       ) : null}
 
-      {!user ? (
-        <p className="mt-3 rounded-2xl border border-dashed border-white/20 px-4 py-3 text-xs text-white/60">
-          Firebase에 로그인한 뒤 관리자 권한이 확인되면 이곳에서 배너를 편집할 수 있습니다.
-        </p>
-      ) : null}
     </div>
   );
 }

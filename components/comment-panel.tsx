@@ -20,8 +20,8 @@ import type { FirebaseClient } from "@/lib/firebase/client";
 import { getFirebaseClient } from "@/lib/firebase/client";
 import {
   BLOCK_COLLECTION,
-  domainErrorMessage,
   formatBlockMessage,
+  genericDomainRejectMessage,
   isAdminEmail,
   isEmailAllowed,
   shouldEnforceDomain,
@@ -105,7 +105,7 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
       }
 
       if (shouldEnforceDomain && !isEmailAllowed(nextUser.email)) {
-        setClientError(domainErrorMessage);
+        setClientError(genericDomainRejectMessage);
         setUser(null);
         await signOut(client.auth);
         return;
@@ -339,7 +339,7 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
       const credential = await signInWithPopup(client.auth, client.provider);
 
       if (shouldEnforceDomain && !isEmailAllowed(credential.user.email)) {
-        setClientError(domainErrorMessage);
+        setClientError(genericDomainRejectMessage);
         await signOut(client.auth);
         return;
       }
