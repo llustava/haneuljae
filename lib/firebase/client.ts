@@ -43,7 +43,11 @@ export function getFirebaseClient(): FirebaseClient {
     app,
     auth: getAuth(app),
     db: getFirestore(app),
-    provider: new GoogleAuthProvider(),
+    provider: (() => {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      return provider;
+    })(),
   };
 
   return cachedClient;
