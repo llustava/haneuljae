@@ -1,7 +1,23 @@
 import type { NextConfig } from "next";
+import createMDX from "@next/mdx";
+
+const withMDX = createMDX({
+  extension: /\.mdx?$/,
+});
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    mdxRs: true,
+  },
+  pageExtensions: ["ts", "tsx", "mdx"],
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+    ],
+  },
 };
 
-export default nextConfig;
+export default withMDX(nextConfig);

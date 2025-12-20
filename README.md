@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Sidebar Logo + MDX 템플릿
 
-## Getting Started
+이 프로젝트는 슬라이딩 사이드바, MDX 기반 콘텐츠, 상단 배너, Firebase 추천/비추천 위젯을 한 번에 확인할 수 있는 Next.js 템플릿입니다.
 
-First, run the development server:
+### 주요 기능
+
+- 사이드바에 로고 컬렉션을 배치하고 토글 버튼으로 폭을 조절합니다.
+- 로고를 선택하면 대응되는 MDX 문서가 본문에 즉시 렌더링됩니다.
+- 배너 컴포넌트는 공지/캠페인 문구를 강조하기 위한 상단 영역입니다.
+- Firebase Authentication + Firestore를 사용해 실명 기반 추천/비추천을 기록합니다.
+
+## 개발 서버
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+브라우저에서 [http://localhost:3000](http://localhost:3000)을 열어 결과를 확인하세요.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## MDX 콘텐츠 편집
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- MDX 파일 위치: `content/*.mdx`
+- 각 파일은 `components/mdx-image.tsx`를 활용해 캡션 있는 이미지를 쉽게 추가할 수 있습니다.
+- 새로운 로고를 추가하려면 `public/logos`에 SVG/PNG를 넣고 `components/logo-showcase.tsx`의 `studios` 배열에 항목을 추가하세요.
 
-## Learn More
+## Firebase 설정 (실명제 추천/비추천)
 
-To learn more about Next.js, take a look at the following resources:
+1. Firebase 콘솔에서 프로젝트를 생성하고 Web App을 추가합니다.
+2. Authentication > Sign-in method에서 Google 또는 원하는 로그인 방식을 활성화합니다.
+3. Firestore Database를 생성하고 보안 규칙을 알맞게 구성합니다.
+4. 다음 환경 변수를 `.env.local`에 설정합니다.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+NEXT_PUBLIC_FIREBASE_API_KEY="..."
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="..."
+NEXT_PUBLIC_FIREBASE_PROJECT_ID="..."
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="..."
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="..."
+NEXT_PUBLIC_FIREBASE_APP_ID="..."
+NEXT_PUBLIC_FIREBASE_ALLOWED_DOMAIN="@hansung-sh.hs.kr"
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+`components/vote-panel.tsx`는 `logoVotes` 컬렉션을 사용하며, 문서 ID는 `<slug>_<uid>` 형식으로 저장됩니다.
 
-## Deploy on Vercel
+## 배포
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+일반적인 Next.js 프로젝트와 동일하게 `npm run build` 후 Vercel 등의 호스팅 서비스에 배포할 수 있습니다.
