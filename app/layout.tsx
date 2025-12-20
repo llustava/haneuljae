@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import SiteFooter from "@/components/site-footer";
 import "./globals.css";
@@ -16,7 +16,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Studio Atlas",
   description: "Immersive MDX-driven stories with social voting",
-  viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

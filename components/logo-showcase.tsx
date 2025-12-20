@@ -178,7 +178,7 @@ export default function LogoShowcase() {
 
   return (
     <section id="logo-showcase" className="flex w-full flex-col gap-6 sm:gap-8 lg:gap-10">
-      <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-4 shadow-[0_25px_70px_rgba(15,23,42,0.6)] sm:p-5 lg:p-6">
+      <div className="overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60 p-4 shadow-[0_25px_70px_rgba(15,23,42,0.6)] sm:p-5 lg:p-6">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-xs uppercase tracking-[0.4em] text-white/40">studio tabs</p>
           <span className="text-[0.65rem] uppercase tracking-[0.3em] text-white/40">
@@ -199,7 +199,7 @@ export default function LogoShowcase() {
                 onClick={() => updateGlobalSlug(studio.slug)}
                 aria-pressed={isActive}
                 aria-label={studio.name}
-                className={`flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl border text-left transition sm:h-auto sm:w-auto sm:min-w-[11rem] sm:flex-row sm:gap-3 sm:px-4 sm:py-3 ${
+                className={`flex h-20 w-20 items-center justify-center rounded-2xl border text-left transition sm:h-auto sm:w-auto sm:min-w-[11rem] sm:flex-shrink-0 sm:flex-row sm:gap-3 sm:px-4 sm:py-3 ${
                   isActive
                     ? "border-white/80 bg-white/20 text-white"
                     : "border-white/10 text-white/70 hover:border-white/40"
@@ -217,7 +217,7 @@ export default function LogoShowcase() {
                     className="h-7 w-7"
                   />
                 </span>
-                <span className="sr-only sm:hidden">{studio.name}</span>
+                <span className="hidden sm:sr-only">{studio.name}</span>
                 <span className="hidden flex-col sm:flex">
                   <strong className="text-sm font-semibold leading-tight text-white">{studio.name}</strong>
                   <span className="text-xs text-white/60">{studio.tagline}</span>

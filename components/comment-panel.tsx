@@ -369,7 +369,7 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
   };
 
   return (
-    <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-4 text-white shadow-[0_25px_80px_rgba(15,23,42,0.55)] sm:p-6 lg:p-8">
+    <section className="overflow-hidden rounded-3xl border border-white/10 bg-slate-950/60 p-4 text-white shadow-[0_25px_80px_rgba(15,23,42,0.55)] sm:p-6 lg:p-8">
       <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.4em] text-white/50">comments</p>

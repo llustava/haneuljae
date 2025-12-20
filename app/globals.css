@@ -25,6 +25,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), "Inter", system-ui, -apple-system,
     BlinkMacSystemFont, "Segoe UI", sans-serif;
+  overflow-x: hidden;
 }
 
 .no-scrollbar {
