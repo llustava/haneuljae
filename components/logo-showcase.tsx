@@ -187,7 +187,7 @@ export default function LogoShowcase() {
         </div>
         <div
           ref={logoRailRef}
-          className="no-scrollbar flex flex-col gap-3 rounded-2xl border border-white/5 bg-white/5 px-3 py-3 text-sm text-white/80 sm:flex-row sm:overflow-x-auto sm:touch-pan-x sm:cursor-grab"
+          className="no-scrollbar flex gap-3 overflow-x-auto rounded-2xl border border-white/5 bg-white/5 px-3 py-3 text-sm text-white/80 touch-pan-x cursor-grab"
           aria-label="스튜디오 목록"
         >
           {studios.map((studio) => {
@@ -198,13 +198,16 @@ export default function LogoShowcase() {
                 type="button"
                 onClick={() => updateGlobalSlug(studio.slug)}
                 aria-pressed={isActive}
-                className={`flex w-full flex-shrink-0 items-center gap-3 rounded-2xl border px-4 py-3 text-left transition sm:w-auto sm:min-w-[11rem] ${
+                aria-label={studio.name}
+                className={`flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl border text-left transition sm:h-auto sm:w-auto sm:min-w-[11rem] sm:flex-row sm:gap-3 sm:px-4 sm:py-3 ${
                   isActive
                     ? "border-white/80 bg-white/20 text-white"
                     : "border-white/10 text-white/70 hover:border-white/40"
                 }`}
               >
-                <span className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br ${studio.accent}`}>
+                <span
+                  className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${studio.accent} sm:h-11 sm:w-11`}
+                >
                   <Image
                     src={studio.logo}
                     alt=""
@@ -214,7 +217,8 @@ export default function LogoShowcase() {
                     className="h-7 w-7"
                   />
                 </span>
-                <span className="flex flex-col">
+                <span className="sr-only sm:hidden">{studio.name}</span>
+                <span className="hidden flex-col sm:flex">
                   <strong className="text-sm font-semibold leading-tight text-white">{studio.name}</strong>
                   <span className="text-xs text-white/60">{studio.tagline}</span>
                 </span>
