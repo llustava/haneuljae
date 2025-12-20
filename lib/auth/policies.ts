@@ -43,3 +43,7 @@ export const isAdminEmail = (email?: string | null) => {
 
 export const BLOCK_COLLECTION = "blockedUsers";
 export const BLOCK_ERROR_MESSAGE = "차단된 계정입니다. 관리자에게 문의하세요.";
+export const formatBlockMessage = (reason?: string | null) =>
+  reason && reason.trim()
+    ? `${BLOCK_ERROR_MESSAGE} 사유: ${reason.trim()}`
+    : BLOCK_ERROR_MESSAGE;

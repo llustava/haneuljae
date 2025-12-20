@@ -7,8 +7,8 @@ import type { FirebaseClient } from "@/lib/firebase/client";
 import { getFirebaseClient } from "@/lib/firebase/client";
 import {
   BLOCK_COLLECTION,
-  BLOCK_ERROR_MESSAGE,
   domainErrorMessage,
+  formatBlockMessage,
   isAdminEmail,
   isEmailAllowed,
   shouldEnforceDomain,
@@ -92,7 +92,8 @@ export default function ExperienceBanner() {
 
       const blockDoc = await getDoc(doc(client.db, BLOCK_COLLECTION, nextUser.uid));
       if (blockDoc.exists()) {
-        setAuthError(BLOCK_ERROR_MESSAGE);
+        const blockData = blockDoc.data() as { reason?: string } | undefined;
+        setAuthError(formatBlockMessage(blockData?.reason));
         await signOut(client.auth);
         return;
       }

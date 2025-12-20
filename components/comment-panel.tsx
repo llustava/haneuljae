@@ -20,8 +20,8 @@ import type { FirebaseClient } from "@/lib/firebase/client";
 import { getFirebaseClient } from "@/lib/firebase/client";
 import {
   BLOCK_COLLECTION,
-  BLOCK_ERROR_MESSAGE,
   domainErrorMessage,
+  formatBlockMessage,
   isAdminEmail,
   isEmailAllowed,
   shouldEnforceDomain,
@@ -114,7 +114,8 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
       const blockRef = doc(client.db, BLOCK_COLLECTION, nextUser.uid);
       const blockSnapshot = await getDoc(blockRef);
       if (blockSnapshot.exists()) {
-        setClientError(BLOCK_ERROR_MESSAGE);
+        const blockData = blockSnapshot.data() as { reason?: string } | undefined;
+        setClientError(formatBlockMessage(blockData?.reason));
         setUser(null);
         await signOut(client.auth);
         return;
@@ -124,7 +125,8 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
         if (!blockDoc.exists()) {
           return;
         }
-        setClientError(BLOCK_ERROR_MESSAGE);
+        const blockData = blockDoc.data() as { reason?: string } | undefined;
+        setClientError(formatBlockMessage(blockData?.reason));
         signOut(client.auth);
       });
 
@@ -344,7 +346,8 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
 
       const blockDoc = await getDoc(doc(client.db, BLOCK_COLLECTION, credential.user.uid));
       if (blockDoc.exists()) {
-        setClientError(BLOCK_ERROR_MESSAGE);
+        const blockData = blockDoc.data() as { reason?: string } | undefined;
+        setClientError(formatBlockMessage(blockData?.reason));
         await signOut(client.auth);
         return;
       }
