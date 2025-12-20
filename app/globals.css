@@ -115,6 +115,15 @@ body {
   }
 }
 
+@keyframes banner-marquee-right {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
 .banner-ticker-mask {
   min-width: 0;
   overflow: hidden;
@@ -125,6 +134,15 @@ body {
   animation: banner-marquee 16s linear infinite;
   display: inline-flex;
   gap: 0.5rem;
+  padding-right: 2rem;
+  white-space: nowrap;
+}
+
+.banner-ticker-track-long {
+  animation: banner-marquee-right 20s linear infinite;
+  display: inline-flex;
+  gap: 0.5rem;
+  padding-left: 2rem;
   padding-right: 2rem;
   white-space: nowrap;
 }

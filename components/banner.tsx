@@ -2,7 +2,16 @@
 
 import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
-import { collection, deleteDoc, doc, getDoc, onSnapshot, orderBy, query, setDoc } from "firebase/firestore";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  onSnapshot,
+  orderBy,
+  query,
+  setDoc,
+} from "firebase/firestore";
 import type { FirebaseClient } from "@/lib/firebase/client";
 import { getFirebaseClient } from "@/lib/firebase/client";
 import {
@@ -14,6 +23,10 @@ import {
   shouldEnforceDomain,
 } from "@/lib/auth/policies";
 
+/* =======================
+   Types
+======================= */
+
 type BannerMessage = {
   id: string;
   label: string;
@@ -24,7 +37,17 @@ type BannerMessage = {
 
 type BannerDraft = Pick<BannerMessage, "label" | "message" | "slug">;
 
+/* =======================
+   Constants
+======================= */
+
 const MOBILE_TICKER_DURATION = 16;
+const LONG_MESSAGE_THRESHOLD = 50;
+const LONG_TICKER_DURATION = 20;
+
+/* =======================
+   Utils
+======================= */
 
 const normalizeSlug = (value: string) =>
   value
@@ -33,11 +56,8 @@ const normalizeSlug = (value: string) =>
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
 
-
 const renderBannerMessage = (message: string): ReactNode => {
-  if (!message) {
-    return message;
-  }
+  if (!message) return message;
 
   const nodes: ReactNode[] = [];
   const pattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
@@ -45,7 +65,7 @@ const renderBannerMessage = (message: string): ReactNode => {
   let match: RegExpExecArray | null;
   let key = 0;
 
-  while ((match = pattern.exec(message)) !== null) {
+  while ((match = pattern.exec(message))) {
     if (match.index > lastIndex) {
       nodes.push(message.slice(lastIndex, match.index));
     }
@@ -59,7 +79,7 @@ const renderBannerMessage = (message: string): ReactNode => {
         className="text-sky-200 underline decoration-dotted underline-offset-4 transition hover:text-white"
       >
         {match[1]}
-      </a>
+      </a>,
     );
 
     lastIndex = pattern.lastIndex;
@@ -72,26 +92,51 @@ const renderBannerMessage = (message: string): ReactNode => {
   return nodes.length ? nodes : message;
 };
 
+/* =======================
+   Component
+======================= */
+
 export default function ExperienceBanner() {
+  /* ---------- Core State ---------- */
   const [client, setClient] = useState<FirebaseClient | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [queue, setQueue] = useState<BannerMessage[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [authError, setAuthError] = useState<string | null>(null);
+
+  /* ---------- Draft / Admin ---------- */
   const [draft, setDraft] = useState<BannerDraft>({ label: "", message: "", slug: "" });
   const [newBanner, setNewBanner] = useState<BannerDraft>({ label: "", message: "", slug: "" });
   const [isSaving, setIsSaving] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [shouldAnimateTicker, setShouldAnimateTicker] = useState(false);
+
+  /* ---------- Preview / Ticker ---------- */
+  const [previewBanner, setPreviewBanner] = useState<BannerMessage | null>(null);
+  const [tickerVariant, setTickerVariant] = useState<"none" | "overflow" | "long">("none");
+
   const messageViewportRef = useRef<HTMLDivElement | null>(null);
   const messageMeasureRef = useRef<HTMLSpanElement | null>(null);
-  const bannerUnsubscribeRef = useRef<(() => void) | null>(null);
 
-  const bannerData = queue;
-  const bannerCount = bannerData.length;
-  const activeBanner = bannerData[activeIndex] ?? null;
+  /* ---------- Derived ---------- */
+  const bannerCount = queue.length;
+  const selectedBanner = queue[activeIndex] ?? null;
+  const activeBanner = previewBanner ?? selectedBanner;
+
+  const normalizedMessageLength = activeBanner?.message?.trim().length ?? 0;
+  const isLongMessage = normalizedMessageLength >= LONG_MESSAGE_THRESHOLD;
+  const shouldAnimateTicker = tickerVariant !== "none";
+  const tickerClassName =
+    tickerVariant === "long" ? "banner-ticker-track-long" : "banner-ticker-track";
+  const tickerDuration =
+    tickerVariant === "long" ? LONG_TICKER_DURATION : MOBILE_TICKER_DURATION;
+
+  const isPreviewing = Boolean(previewBanner);
   const isAdmin = isAdminEmail(user?.email);
+
+  /* =======================
+     Firebase Init
+  ======================= */
 
   useEffect(() => {
     try {
@@ -102,25 +147,16 @@ export default function ExperienceBanner() {
     }
   }, []);
 
-  useEffect(() => {
-    if (!client) {
-      setQueue([]);
-      return undefined;
-    }
+  /* =======================
+     Auth State
+  ======================= */
 
-    const cleanupBannerListener = () => {
-      if (bannerUnsubscribeRef.current) {
-        bannerUnsubscribeRef.current();
-        bannerUnsubscribeRef.current = null;
-      }
-    };
+  useEffect(() => {
+    if (!client) return;
 
     const unsubscribe = onAuthStateChanged(client.auth, async (nextUser) => {
-      cleanupBannerListener();
-
       if (!nextUser) {
         setUser(null);
-        setQueue([]);
         return;
       }
 
@@ -142,10 +178,27 @@ export default function ExperienceBanner() {
 
       setAuthError(null);
       setUser(nextUser);
+    });
 
-      const bannerQuery = query(collection(client.db, "banners"), orderBy("order", "asc"));
-      bannerUnsubscribeRef.current = onSnapshot(bannerQuery, (snapshot) => {
-        const remoteEntries: BannerMessage[] = snapshot.docs.map((docSnapshot, index) => {
+    return () => unsubscribe();
+  }, [client]);
+
+  /* =======================
+     Banner Snapshot
+  ======================= */
+
+  useEffect(() => {
+    if (!client) {
+      setQueue([]);
+      return;
+    }
+
+    const bannerQuery = query(collection(client.db, "banners"), orderBy("order", "asc"));
+
+    const unsubscribe = onSnapshot(
+      bannerQuery,
+      (snapshot) => {
+        const items: BannerMessage[] = snapshot.docs.map((docSnapshot, index) => {
           const data = docSnapshot.data() as Partial<BannerMessage>;
           return {
             id: docSnapshot.id,
@@ -156,21 +209,38 @@ export default function ExperienceBanner() {
           };
         });
 
-        if (!remoteEntries.length) {
-          setQueue([]);
-          return;
-        }
+        items.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        setQueue(items);
+      },
+      (error) => {
+        console.error("배너 데이터를 불러오지 못했습니다", error);
+        setAuthError("배너 데이터를 불러오지 못했습니다. 잠시 후 다시 시도하세요.");
+      },
+    );
 
-        remoteEntries.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-        setQueue(remoteEntries);
-      });
-    });
-
-    return () => {
-      unsubscribe();
-      cleanupBannerListener();
-    };
+    return () => unsubscribe();
   }, [client]);
+
+  /* =======================
+     Sync Draft
+  ======================= */
+
+  useEffect(() => {
+    if (!selectedBanner) {
+      setDraft({ label: "", message: "", slug: "" });
+      return;
+    }
+
+    setDraft({
+      label: selectedBanner.label,
+      message: selectedBanner.message,
+      slug: selectedBanner.slug,
+    });
+  }, [selectedBanner]);
+
+  /* =======================
+     Index Guard
+  ======================= */
 
   useEffect(() => {
     if (!bannerCount) {
@@ -183,66 +253,74 @@ export default function ExperienceBanner() {
     }
   }, [activeIndex, bannerCount]);
 
-  useEffect(() => {
-    if (!activeBanner) {
-      setDraft({ label: "", message: "", slug: "" });
-      return;
-    }
-
-    setDraft({
-      label: activeBanner.label,
-      message: activeBanner.message,
-      slug: activeBanner.slug,
-    });
-  }, [activeBanner]);
+  /* =======================
+     Ticker Logic
+  ======================= */
 
   useEffect(() => {
-    if (typeof window === "undefined") {
+    if (!activeBanner?.message) {
+      setTickerVariant("none");
       return;
     }
 
     const evaluateTicker = () => {
       if (!messageViewportRef.current || !messageMeasureRef.current) {
-        setShouldAnimateTicker(false);
+        setTickerVariant("none");
         return;
       }
 
-      if (window.innerWidth >= 640 || !activeBanner?.message) {
-        setShouldAnimateTicker(false);
+      if (isLongMessage) {
+        setTickerVariant("long");
+        return;
+      }
+
+      if (typeof window === "undefined" || window.innerWidth >= 640) {
+        setTickerVariant("none");
         return;
       }
 
       const containerWidth = messageViewportRef.current.clientWidth;
       const contentWidth = messageMeasureRef.current.scrollWidth;
-      setShouldAnimateTicker(contentWidth - containerWidth > 8);
+      setTickerVariant(contentWidth - containerWidth > 8 ? "overflow" : "none");
     };
 
     evaluateTicker();
-    window.addEventListener("resize", evaluateTicker);
 
-    return () => {
-      window.removeEventListener("resize", evaluateTicker);
-    };
-  }, [activeBanner?.label, activeBanner?.message]);
-
-  const queuePreview = useMemo(() => {
-    if (!bannerCount) {
-      return [];
+    if (typeof window === "undefined") {
+      return;
     }
 
-    return bannerData.map((item, index) => ({
+    window.addEventListener("resize", evaluateTicker);
+    return () => window.removeEventListener("resize", evaluateTicker);
+  }, [activeBanner?.message, isLongMessage]);
+
+  /* =======================
+     Queue Preview
+  ======================= */
+
+  const queuePreview = useMemo(() => {
+    if (!bannerCount) return [];
+
+    return queue.map((item, index) => ({
       item,
       isActive: index === activeIndex,
       position: (index - activeIndex + bannerCount) % bannerCount,
     }));
-  }, [activeIndex, bannerCount, bannerData]);
+  }, [queue, activeIndex, bannerCount]);
+
+  /* =======================
+     Actions
+  ======================= */
 
   const handleSkip = () => {
-    if (!bannerCount) {
+    if (previewBanner) {
+      setPreviewBanner(null);
       return;
     }
 
-    setActiveIndex((previous) => (previous + 1) % bannerCount);
+    if (bannerCount) {
+      setActiveIndex((prev) => (prev + 1) % bannerCount);
+    }
   };
 
   const handleNavigateToStudio = (slug: string) => {
@@ -260,23 +338,37 @@ export default function ExperienceBanner() {
   };
 
   const handleLogout = async () => {
-    if (!client) {
-      return;
+    if (client) {
+      await signOut(client.auth);
     }
-
-    await signOut(client.auth);
   };
 
+  const applyPreviewFrom = (source: BannerDraft, fallbackId: string) => {
+    const label = source.label.trim() || "미리보기 배너";
+    const message = source.message.trim() || "배너 문구를 입력하세요.";
+    const slug = normalizeSlug(source.slug.trim()) || `${fallbackId}-preview`;
+
+    setPreviewBanner({
+      id: `${fallbackId}-preview`,
+      label,
+      message,
+      slug,
+      order: -1,
+    });
+  };
+
+  const exitPreview = () => setPreviewBanner(null);
+
   const handleAdminSave = async () => {
-    if (!client || !isAdmin || !activeBanner) {
+    if (!client || !isAdmin || !selectedBanner) {
       return;
     }
 
     const nextLabel = draft.label.trim();
     const nextMessage = draft.message.trim();
-    const nextSlug = (draft.slug || activeBanner.slug).trim();
+    const nextSlug = (draft.slug || selectedBanner.slug).trim();
     const normalizedSlug = normalizeSlug(nextSlug);
-    const finalSlug = normalizedSlug || activeBanner.slug;
+    const finalSlug = normalizedSlug || selectedBanner.slug;
 
     if (!nextLabel || !nextMessage || !finalSlug) {
       setAuthError("모든 필드를 채워주세요.");
@@ -286,11 +378,11 @@ export default function ExperienceBanner() {
     setIsSaving(true);
 
     try {
-      await setDoc(doc(client.db, "banners", activeBanner.id), {
+      await setDoc(doc(client.db, "banners", selectedBanner.id), {
         label: nextLabel,
         message: nextMessage,
         slug: finalSlug,
-        order: activeBanner.order ?? activeIndex,
+        order: selectedBanner.order ?? activeIndex,
       });
       setAuthError(null);
     } catch (error) {
@@ -337,14 +429,14 @@ export default function ExperienceBanner() {
   };
 
   const handleDeleteBanner = async () => {
-    if (!client || !isAdmin || !activeBanner) {
+    if (!client || !isAdmin || !selectedBanner) {
       return;
     }
 
     setIsDeleting(true);
 
     try {
-      await deleteDoc(doc(client.db, "banners", activeBanner.id));
+      await deleteDoc(doc(client.db, "banners", selectedBanner.id));
       setAuthError(null);
       setActiveIndex(0);
     } catch (error) {
@@ -355,6 +447,10 @@ export default function ExperienceBanner() {
     }
   };
 
+  /* =======================
+     JSX
+  ======================= */
+
   return (
     <div className="relative mb-6 overflow-hidden rounded-2xl border border-white/15 bg-white/5 p-4 text-white shadow-[0_12px_45px_rgba(15,23,42,0.45)] sm:p-5 lg:p-6">
       <div className="flex flex-col gap-2">
@@ -362,6 +458,11 @@ export default function ExperienceBanner() {
           <span className="rounded-full border border-white/20 px-3 py-1 text-[0.65rem] uppercase tracking-[0.4em] text-white/70">
             live
           </span>
+          {isPreviewing ? (
+            <span className="rounded-full border border-amber-200/40 px-3 py-1 text-[0.65rem] uppercase tracking-[0.4em] text-amber-200">
+              preview
+            </span>
+          ) : null}
           {activeBanner ? (
             <div className="flex flex-1 flex-col gap-2 text-sm text-white/80 sm:flex-row sm:items-center sm:gap-3">
               <button
@@ -381,11 +482,11 @@ export default function ExperienceBanner() {
               >
                 <span
                   className={`inline-flex items-center gap-2 align-middle ${
-                    shouldAnimateTicker ? "banner-ticker-track" : ""
+                    shouldAnimateTicker ? tickerClassName : ""
                   }`}
                   style={
                     shouldAnimateTicker
-                      ? { animationDuration: `${MOBILE_TICKER_DURATION}s` }
+                      ? { animationDuration: `${tickerDuration}s` }
                       : undefined
                   }
                 >
@@ -394,11 +495,15 @@ export default function ExperienceBanner() {
                 {shouldAnimateTicker ? (
                   <span
                     aria-hidden="true"
-                    className="banner-ticker-track"
-                    style={{
-                      animationDuration: `${MOBILE_TICKER_DURATION}s`,
-                      animationDelay: `${MOBILE_TICKER_DURATION / 2}s`,
-                    }}
+                    className={tickerClassName}
+                    style={
+                      tickerVariant === "long"
+                        ? { animationDuration: `${tickerDuration}s` }
+                        : {
+                            animationDuration: `${tickerDuration}s`,
+                            animationDelay: `${tickerDuration / 2}s`,
+                          }
+                    }
                   >
                     {renderBannerMessage(activeBanner.message)}
                   </span>
@@ -477,7 +582,20 @@ export default function ExperienceBanner() {
             </button>
           </div>
 
-          {activeBanner ? (
+          {isPreviewing ? (
+            <div className="rounded-xl border border-amber-300/30 bg-amber-400/10 px-4 py-3 text-xs text-amber-100">
+              프리뷰 모드가 활성화되었습니다. 아래 버튼으로 사용자 시점을 종료할 수 있습니다.
+              <button
+                type="button"
+                onClick={exitPreview}
+                className="ml-2 rounded-full border border-amber-200/60 px-3 py-1 text-[0.6rem] uppercase tracking-[0.3em] text-amber-100 transition hover:border-amber-100"
+              >
+                프리뷰 종료
+              </button>
+            </div>
+          ) : null}
+
+          {selectedBanner ? (
             <div className="space-y-3">
               <p className="text-xs uppercase tracking-[0.3em] text-white/40">선택한 배너 편집</p>
               <label className="space-y-1 text-white/80">
@@ -522,6 +640,13 @@ export default function ExperienceBanner() {
                   {isDeleting ? "삭제 중..." : "배너 삭제"}
                 </button>
               </div>
+              <button
+                type="button"
+                onClick={() => applyPreviewFrom(draft, selectedBanner.slug || "current")}
+                className="w-full rounded-xl border border-amber-200/40 bg-amber-400/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-amber-100 transition hover:border-amber-200"
+              >
+                사용자 프리뷰 보기
+              </button>
             </div>
           ) : (
             <p className="rounded-xl border border-dashed border-white/20 px-4 py-3 text-xs text-white/60">
@@ -555,14 +680,23 @@ export default function ExperienceBanner() {
                 className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white focus:border-sky-300 focus:outline-none"
               />
             </label>
-            <button
-              type="button"
-              onClick={handleCreateBanner}
-              disabled={isCreating}
-              className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:border-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isCreating ? "생성 중..." : "새 배너 생성"}
-            </button>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <button
+                type="button"
+                onClick={handleCreateBanner}
+                disabled={isCreating}
+                className="flex-1 rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:border-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isCreating ? "생성 중..." : "새 배너 생성"}
+              </button>
+              <button
+                type="button"
+                onClick={() => applyPreviewFrom(newBanner, "new")}
+                className="flex-1 rounded-xl border border-amber-200/40 bg-amber-400/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-amber-100 transition hover:border-amber-200"
+              >
+                새 배너 프리뷰
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
