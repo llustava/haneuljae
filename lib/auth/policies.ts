@@ -1,5 +1,3 @@
-import adminConfig from "@/config/admins.json";
-
 const allowedDomainRaw =
   process.env.NEXT_PUBLIC_FIREBASE_ALLOWED_DOMAIN ??
   process.env.NEXT_PUBLIC_ALLOWED_DOMAIN ??
@@ -25,12 +23,13 @@ export const isEmailAllowed = (email?: string | null) => {
 };
 
 const envAdminsRaw =
-  process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
-
-const jsonAdmins = Array.isArray(adminConfig) ? adminConfig : [];
+  process.env.NEXT_PUBLIC_ADMIN_EMAILS ??
+  process.env.NEXT_PUBLIC_ADMIN_EMAIL ??
+  "";
 
 const adminEmailSet = new Set(
-  [...jsonAdmins, ...envAdminsRaw.split(",")]
+  envAdminsRaw
+    .split(/[,\n]/)
     .map((value) => value.trim().toLowerCase())
     .filter(Boolean)
 );

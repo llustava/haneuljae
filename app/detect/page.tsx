@@ -8,8 +8,9 @@ export const metadata: Metadata = {
   description: "Server and client coordinated device detection demo",
 };
 
-export default function DetectPage() {
-  const userAgent = headers().get("user-agent") ?? "";
+export default async function DetectPage() {
+  const headersList = await headers();
+  const userAgent = headersList.get("user-agent") ?? "";
   const detector = new MobileDetect(userAgent);
   const isMobile = Boolean(detector.mobile());
 
