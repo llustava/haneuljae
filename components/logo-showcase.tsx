@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 
 import { studios } from "@/lib/studios";
@@ -48,12 +48,27 @@ export default function LogoShowcase() {
   );
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const logoRailRef = useRef<HTMLDivElement | null>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
 
   const activeStudio = useMemo(
     () => studios.find((studio) => studio.slug === activeSlug) ?? studios[0],
     [activeSlug]
   );
   const Content = activeStudio.Content;
+
+  const focusStudioContent = useCallback(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const target = contentRef.current ?? document.getElementById("logo-showcase");
+    if (!target) {
+      return;
+    }
+
+    const shouldCenter = window.innerWidth >= 1024;
+    target.scrollIntoView({ behavior: "smooth", block: shouldCenter ? "center" : "start" });
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -67,6 +82,7 @@ export default function LogoShowcase() {
       }
 
       setSidebarOpen(true);
+      focusStudioContent();
     };
 
     window.addEventListener("studio:select", handleStudioSelect);
@@ -74,7 +90,7 @@ export default function LogoShowcase() {
     return () => {
       window.removeEventListener("studio:select", handleStudioSelect);
     };
-  }, []);
+  }, [focusStudioContent]);
 
   useEffect(() => {
     const rail = logoRailRef.current;
@@ -82,12 +98,23 @@ export default function LogoShowcase() {
       return undefined;
     }
 
+    const isDragEnabled = () =>
+      typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches;
+
     let isPointerDown = false;
     let startX = 0;
     let scrollStart = 0;
     let pointerId: number | null = null;
 
     const handlePointerDown = (event: PointerEvent) => {
+      if (!isDragEnabled()) {
+        return;
+      }
+
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("button")) {
+        return;
+      }
       isPointerDown = true;
       startX = event.clientX;
       scrollStart = rail.scrollLeft;
@@ -146,6 +173,7 @@ export default function LogoShowcase() {
     nextUrl.hash = nextSlug;
     window.history.replaceState(null, "", nextUrl);
     window.dispatchEvent(new CustomEvent("studio:select", { detail: nextSlug }));
+    focusStudioContent();
   };
 
   return (
@@ -159,7 +187,7 @@ export default function LogoShowcase() {
         </div>
         <div
           ref={logoRailRef}
-          className="no-scrollbar flex gap-3 overflow-x-auto rounded-2xl border border-white/5 bg-white/5 px-3 py-3 text-sm text-white/80 touch-pan-x cursor-grab"
+          className="no-scrollbar flex flex-col gap-3 rounded-2xl border border-white/5 bg-white/5 px-3 py-3 text-sm text-white/80 sm:flex-row sm:overflow-x-auto sm:touch-pan-x sm:cursor-grab"
           aria-label="스튜디오 목록"
         >
           {studios.map((studio) => {
@@ -170,7 +198,7 @@ export default function LogoShowcase() {
                 type="button"
                 onClick={() => updateGlobalSlug(studio.slug)}
                 aria-pressed={isActive}
-                className={`flex min-w-[11rem] flex-shrink-0 items-center gap-3 rounded-2xl border px-4 py-2 text-left transition ${
+                className={`flex w-full flex-shrink-0 items-center gap-3 rounded-2xl border px-4 py-3 text-left transition sm:w-auto sm:min-w-[11rem] ${
                   isActive
                     ? "border-white/80 bg-white/20 text-white"
                     : "border-white/10 text-white/70 hover:border-white/40"
@@ -195,7 +223,10 @@ export default function LogoShowcase() {
           })}
         </div>
       </div>
-      <div className="relative flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60 shadow-[0_35px_120px_rgba(15,23,42,0.7)] lg:min-h-[32rem] lg:flex-row">
+      <div
+        ref={contentRef}
+        className="relative flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60 shadow-[0_35px_120px_rgba(15,23,42,0.7)] lg:min-h-[32rem] lg:flex-row"
+      >
         <aside
           className={`relative hidden flex-col border-b border-white/5 bg-slate-950/60 transition-all duration-500 lg:flex lg:border-b-0 lg:border-r ${
             sidebarOpen ? "lg:w-80" : "lg:w-24"

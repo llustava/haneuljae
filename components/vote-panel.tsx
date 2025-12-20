@@ -79,11 +79,25 @@ export default function VotePanel({ slug, title }: VotePanelProps) {
       }
     };
 
+    let voteUnsubscribe: (() => void) | null = null;
+    const cleanupVoteListener = () => {
+      if (voteUnsubscribe) {
+        voteUnsubscribe();
+        voteUnsubscribe = null;
+      }
+    };
+
     const unsubscribe = onAuthStateChanged(client.auth, async (nextUser) => {
       cleanupBlockListener();
+      cleanupVoteListener();
 
       if (!nextUser) {
         setUser(null);
+        setCounts({ up: 0, down: 0 });
+        setEntriesByChoice({ up: [], down: [] });
+        setUserChoice(null);
+        setUserVoteId(null);
+        setVisibleList(null);
         return;
       }
 
@@ -115,22 +129,11 @@ export default function VotePanel({ slug, title }: VotePanelProps) {
 
       setClientError(null);
       setUser(nextUser);
-    });
 
-    return () => {
-      unsubscribe();
-      cleanupBlockListener();
-    };
-  }, [client]);
+      const votesQuery = query(collection(client.db, "logoVotes"), where("slug", "==", slug));
+      const currentUserId = nextUser.uid;
 
-  useEffect(() => {
-    if (!client || !user) {
-      return undefined;
-    }
-
-    const votesQuery = query(collection(client.db, "logoVotes"), where("slug", "==", slug));
-
-    const unsubscribe = onSnapshot(votesQuery, (snapshot) => {
+      voteUnsubscribe = onSnapshot(votesQuery, (snapshot) => {
       const latestByUser = new Map<string, VoteEntry>();
 
       snapshot.forEach((voteDoc) => {
@@ -188,18 +191,18 @@ export default function VotePanel({ slug, title }: VotePanelProps) {
       setCounts({ up: upEntries.length, down: downEntries.length });
       setEntriesByChoice({ up: upEntries, down: downEntries });
 
-      if (user?.uid) {
-        const myEntry = latestByUser.get(user.uid);
+        const myEntry = latestByUser.get(currentUserId);
         setUserChoice(myEntry?.choice ?? null);
         setUserVoteId(myEntry?.id ?? null);
-      } else {
-        setUserChoice(null);
-        setUserVoteId(null);
-      }
+      });
     });
 
-    return unsubscribe;
-  }, [client, slug, user?.uid]);
+    return () => {
+      unsubscribe();
+      cleanupBlockListener();
+      cleanupVoteListener();
+    };
+  }, [client, slug]);
 
   const totalVotes = counts.up + counts.down;
   const approval = totalVotes === 0 ? 0 : Math.round((counts.up / totalVotes) * 100);
@@ -318,16 +321,6 @@ export default function VotePanel({ slug, title }: VotePanelProps) {
 
   const isUpSelected = userChoice === "up";
   const isDownSelected = userChoice === "down";
-
-  useEffect(() => {
-    if (!user) {
-      setUserChoice(null);
-      setUserVoteId(null);
-      setCounts({ up: 0, down: 0 });
-      setEntriesByChoice({ up: [], down: [] });
-      setVisibleList(null);
-    }
-  }, [user]);
 
   return (
     <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-6 shadow-2xl">

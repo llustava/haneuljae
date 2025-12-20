@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { collection, deleteDoc, doc, getDoc, onSnapshot, orderBy, query, setDoc } from "firebase/firestore";
 import type { FirebaseClient } from "@/lib/firebase/client";
@@ -23,6 +23,8 @@ type BannerMessage = {
 };
 
 type BannerDraft = Pick<BannerMessage, "label" | "message" | "slug">;
+
+const MOBILE_TICKER_DURATION = 16;
 
 const normalizeSlug = (value: string) =>
   value
@@ -81,6 +83,9 @@ export default function ExperienceBanner() {
   const [isSaving, setIsSaving] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [shouldAnimateTicker, setShouldAnimateTicker] = useState(false);
+  const messageViewportRef = useRef<HTMLDivElement | null>(null);
+  const messageMeasureRef = useRef<HTMLSpanElement | null>(null);
 
   const bannerData = queue;
   const bannerCount = bannerData.length;
@@ -182,6 +187,35 @@ export default function ExperienceBanner() {
       slug: activeBanner.slug,
     });
   }, [activeBanner]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const evaluateTicker = () => {
+      if (!messageViewportRef.current || !messageMeasureRef.current) {
+        setShouldAnimateTicker(false);
+        return;
+      }
+
+      if (window.innerWidth >= 640 || !activeBanner?.message) {
+        setShouldAnimateTicker(false);
+        return;
+      }
+
+      const containerWidth = messageViewportRef.current.clientWidth;
+      const contentWidth = messageMeasureRef.current.scrollWidth;
+      setShouldAnimateTicker(contentWidth - containerWidth > 8);
+    };
+
+    evaluateTicker();
+    window.addEventListener("resize", evaluateTicker);
+
+    return () => {
+      window.removeEventListener("resize", evaluateTicker);
+    };
+  }, [activeBanner?.label, activeBanner?.message]);
 
   const queuePreview = useMemo(() => {
     if (!bannerCount) {
@@ -321,16 +355,55 @@ export default function ExperienceBanner() {
             live
           </span>
           {activeBanner ? (
-            <p className="flex-1 truncate text-sm text-white/80">
+            <div className="flex flex-1 flex-col gap-2 text-sm text-white/80 sm:flex-row sm:items-center sm:gap-3">
               <button
                 type="button"
                 onClick={() => handleNavigateToStudio(activeBanner.slug)}
-                className="mr-2 inline-flex items-center rounded-full border border-dashed border-white/30 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:border-white"
+                className="inline-flex items-center rounded-full border border-dashed border-white/30 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:border-white"
               >
                 {activeBanner.label}
               </button>
-              <span className="align-middle">{renderBannerMessage(activeBanner.message)}</span>
-            </p>
+              <div
+                ref={messageViewportRef}
+                className={`relative flex-1 ${
+                  shouldAnimateTicker
+                    ? "banner-ticker-mask"
+                    : "overflow-hidden whitespace-nowrap text-ellipsis"
+                }`}
+              >
+                <span
+                  className={`inline-flex items-center gap-2 align-middle ${
+                    shouldAnimateTicker ? "banner-ticker-track" : ""
+                  }`}
+                  style={
+                    shouldAnimateTicker
+                      ? { animationDuration: `${MOBILE_TICKER_DURATION}s` }
+                      : undefined
+                  }
+                >
+                  {renderBannerMessage(activeBanner.message)}
+                </span>
+                {shouldAnimateTicker ? (
+                  <span
+                    aria-hidden="true"
+                    className="banner-ticker-track"
+                    style={{
+                      animationDuration: `${MOBILE_TICKER_DURATION}s`,
+                      animationDelay: `${MOBILE_TICKER_DURATION / 2}s`,
+                    }}
+                  >
+                    {renderBannerMessage(activeBanner.message)}
+                  </span>
+                ) : null}
+                <span
+                  aria-hidden="true"
+                  ref={messageMeasureRef}
+                  className="pointer-events-none absolute left-0 top-0 inline-flex whitespace-nowrap opacity-0"
+                >
+                  {renderBannerMessage(activeBanner.message)}
+                </span>
+              </div>
+            </div>
           ) : (
             <p className="flex-1 rounded-2xl border border-dashed border-white/20 px-3 py-2 text-sm text-white/60">
               등록된 배너가 없습니다. 관리자에서 새 항목을 추가하세요.

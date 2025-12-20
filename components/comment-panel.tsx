@@ -73,6 +73,7 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
   const blockUnsubscribeRef = useRef<(() => void) | null>(null);
 
   const isAdmin = isAdminEmail(user?.email);
+  const userId = user?.uid ?? null;
 
   useEffect(() => {
     try {
@@ -141,7 +142,8 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
   }, [client]);
 
   useEffect(() => {
-    if (!client) {
+    if (!client || !userId) {
+      setComments([]);
       return undefined;
     }
 
@@ -179,7 +181,7 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
     });
 
     return unsubscribe;
-  }, [client, slug]);
+  }, [client, slug, userId]);
 
   const threads = useMemo<CommentThread[]>(() => {
     const topLevel = comments.filter((entry) => !entry.parentId);

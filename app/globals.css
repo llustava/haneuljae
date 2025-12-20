@@ -94,3 +94,26 @@ body {
     border-radius: 0.85rem;
   }
 }
+
+@keyframes banner-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+.banner-ticker-mask {
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.banner-ticker-track {
+  animation: banner-marquee 16s linear infinite;
+  display: inline-flex;
+  gap: 0.5rem;
+  padding-right: 2rem;
+  white-space: nowrap;
+}
