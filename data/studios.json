@@ -1,13 +1,12 @@
 [
   {
-    "slug": "aurora-lens",
-    "name": "Aurora Lens",
-    "tagline": "Polar field studio",
-    "summary": "빙설 원정과 실시간 내러티브를 결합해 드론·레이더·인터렉션 로그를 하나의 MDX 노트로 묶는 북극권 필드 스튜디오입니다.",
-    "category": "FIELD DOCS",
+    "slug": "statistics",
+    "name": "직감vs데이터",
+    "tagline": "STATISTICS",
+    "summary": "불확실한 데이터의 예측",
+    "category": "수학과교실",
     "accent": "from-sky-400/70 to-cyan-300/70",
-    "logo": "/logos/aurora.svg",
-    "bannerMessage": "빙설 로케이션 생중계 : 팀 피드백 루프 7분 → 90초"
+    "logo": "/logos/STATISTICS.svg"
   },
   {
     "slug": "solstice-market",

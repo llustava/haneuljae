@@ -1,19 +1,20 @@
 import type { ComponentType } from "react";
 import studiosData from "@/data/studios.json";
 
-import AuroraLens from "@/content/aurora-lens.mdx";
-import SolsticeMarket from "@/content/solstice-market.mdx";
-import NebulaLab from "@/content/nebula-lab.mdx";
-import TidalForge from "@/content/tidal-forge.mdx";
-import LumenBay from "@/content/lumen-bay.mdx";
-import EmberHarbor from "@/content/ember-harbor.mdx";
-import ZenithOrchard from "@/content/zenith-orchard.mdx";
-import MonsoonVault from "@/content/monsoon-vault.mdx";
-import PrismaDrift from "@/content/prisma-drift.mdx";
-import ChronoDunes from "@/content/chrono-dunes.mdx";
-import DeltaForum from "@/content/delta-forum.mdx";
-import SierraHatch from "@/content/sierra-hatch.mdx";
-import QuietOrbit from "@/content/quiet-orbit.mdx";
+import AuroraLens from "@/content/aurora-lens/aurora-lens.mdx";
+import SolsticeMarket from "@/content/solstice-market/solstice-market.mdx";
+import NebulaLab from "@/content/nebula-lab/nebula-lab.mdx";
+import TidalForge from "@/content/tidal-forge/tidal-forge.mdx";
+import LumenBay from "@/content/lumen-bay/lumen-bay.mdx";
+import EmberHarbor from "@/content/ember-harbor/ember-harbor.mdx";
+import ZenithOrchard from "@/content/zenith-orchard/zenith-orchard.mdx";
+import MonsoonVault from "@/content/monsoon-vault/monsoon-vault.mdx";
+import PrismaDrift from "@/content/prisma-drift/prisma-drift.mdx";
+import ChronoDunes from "@/content/chrono-dunes/chrono-dunes.mdx";
+import DeltaForum from "@/content/delta-forum/delta-forum.mdx";
+import SierraHatch from "@/content/sierra-hatch/sierra-hatch.mdx";
+import QuietOrbit from "@/content/quiet-orbit/quiet-orbit.mdx";
+import STATISTICS from "@/content/STATISTICS/STATISTICS.mdx";
 
 export type StudioMetadata = {
   slug: string;
@@ -32,6 +33,7 @@ export type StudioConfig = StudioMetadata & {
 
 const contentMap: Record<string, ComponentType> = {
   "aurora-lens": AuroraLens,
+  "statistics": STATISTICS,
   "solstice-market": SolsticeMarket,
   "nebula-lab": NebulaLab,
   "tidal-forge": TidalForge,
