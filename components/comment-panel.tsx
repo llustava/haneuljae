@@ -369,22 +369,17 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
 
       <ul className="mt-8 space-y-4">
         {threads.length ? (
-          threads.map((thread, threadIndex) => (
+          threads.map((thread) => (
             <li key={thread.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <div className="flex flex-col gap-1">
                 <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.4em] text-white/40">
-                      댓글 {threadIndex + 1}
-                    </p>
-                    <p
-                      className={`text-sm font-semibold ${
-                        thread.isDeleted ? "text-white/40" : "text-white"
-                      }`}
-                    >
-                      {thread.displayName}
-                    </p>
-                  </div>
+                  <p
+                    className={`text-sm font-semibold ${
+                      thread.isDeleted ? "text-white/40" : "text-white"
+                    }`}
+                  >
+                    {thread.displayName}
+                  </p>
                   <p className="text-xs text-white/50">{formatTimestamp(thread.createdAt)}</p>
                 </div>
                 <p
@@ -464,12 +459,9 @@ export default function CommentPanel({ slug, title }: CommentPanelProps) {
 
               {thread.replies.length ? (
                 <ul className="mt-4 space-y-3 border-l border-white/10 pl-4">
-                  {thread.replies.map((reply, replyIndex) => (
+                  {thread.replies.map((reply) => (
                     <li key={reply.id} className="rounded-2xl border border-white/5 bg-slate-950/40 p-3">
                       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                        <p className="text-xs uppercase tracking-[0.4em] text-white/40">
-                          - 대댓글 {threadIndex + 1}.{replyIndex + 1}
-                        </p>
                         <p className="text-xs text-white/50">{formatTimestamp(reply.createdAt)}</p>
                       </div>
                       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">

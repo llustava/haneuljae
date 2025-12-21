@@ -41,9 +41,12 @@ type BannerDraft = Pick<BannerMessage, "label" | "message" | "slug">;
    Constants
 ======================= */
 
-const MOBILE_TICKER_DURATION = 16;
+const MOBILE_TICKER_DURATION = 24;
 const LONG_MESSAGE_THRESHOLD = 50;
-const LONG_TICKER_DURATION = 20;
+const LONG_TICKER_DURATION = 28;
+const MARQUEE_PIXELS_PER_SECOND = 60;
+const MARQUEE_MIN_DURATION = 14;
+const MARQUEE_MAX_DURATION = 45;
 
 /* =======================
    Utils
@@ -114,6 +117,7 @@ export default function ExperienceBanner() {
   /* ---------- Preview / Ticker ---------- */
   const [previewBanner, setPreviewBanner] = useState<BannerMessage | null>(null);
   const [tickerVariant, setTickerVariant] = useState<"none" | "overflow" | "long">("none");
+  const [tickerDuration, setTickerDuration] = useState<number>(MOBILE_TICKER_DURATION);
 
   const messageViewportRef = useRef<HTMLDivElement | null>(null);
   const messageMeasureRef = useRef<HTMLSpanElement | null>(null);
@@ -128,8 +132,6 @@ export default function ExperienceBanner() {
   const shouldAnimateTicker = tickerVariant !== "none";
   const tickerClassName =
     tickerVariant === "long" ? "banner-ticker-track-long" : "banner-ticker-track";
-  const tickerDuration =
-    tickerVariant === "long" ? LONG_TICKER_DURATION : MOBILE_TICKER_DURATION;
 
   const isPreviewing = Boolean(previewBanner);
   const isAdmin = isAdminEmail(user?.email);
@@ -263,36 +265,46 @@ export default function ExperienceBanner() {
       return;
     }
 
-    const evaluateTicker = () => {
-      if (!messageViewportRef.current || !messageMeasureRef.current) {
-        setTickerVariant("none");
-        return;
-      }
+    setTickerVariant(isLongMessage ? "long" : "overflow");
+  }, [activeBanner?.message, isLongMessage]);
 
-      if (isLongMessage) {
-        setTickerVariant("long");
-        return;
-      }
-
-      if (typeof window === "undefined" || window.innerWidth >= 640) {
-        setTickerVariant("none");
-        return;
-      }
-
-      const containerWidth = messageViewportRef.current.clientWidth;
-      const contentWidth = messageMeasureRef.current.scrollWidth;
-      setTickerVariant(contentWidth - containerWidth > 8 ? "overflow" : "none");
-    };
-
-    evaluateTicker();
-
-    if (typeof window === "undefined") {
+  useEffect(() => {
+    if (!activeBanner?.message) {
+      setTickerDuration(MOBILE_TICKER_DURATION);
       return;
     }
 
-    window.addEventListener("resize", evaluateTicker);
-    return () => window.removeEventListener("resize", evaluateTicker);
-  }, [activeBanner?.message, isLongMessage]);
+    const measureDuration = () => {
+      if (!messageMeasureRef.current) {
+        return;
+      }
+
+      const contentWidth = messageMeasureRef.current.scrollWidth || 0;
+      const travelDistance = Math.max(contentWidth * 2, 1);
+      const rawDuration = travelDistance / MARQUEE_PIXELS_PER_SECOND;
+      const clampedDuration = Math.min(
+        MARQUEE_MAX_DURATION,
+        Math.max(MARQUEE_MIN_DURATION, rawDuration),
+      );
+
+      setTickerDuration(
+        tickerVariant === "long" ? Math.max(clampedDuration, LONG_TICKER_DURATION) : clampedDuration,
+      );
+    };
+
+    if (typeof window === "undefined") {
+      measureDuration();
+      return;
+    }
+
+    const rafId = window.requestAnimationFrame(measureDuration);
+    window.addEventListener("resize", measureDuration);
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", measureDuration);
+    };
+  }, [activeBanner?.message, tickerVariant]);
 
   /* =======================
      Queue Preview
@@ -474,10 +486,10 @@ export default function ExperienceBanner() {
               </button>
               <div
                 ref={messageViewportRef}
-                className={`relative flex-1 ${
+                className={`relative flex-1 whitespace-nowrap ${
                   shouldAnimateTicker
                     ? "banner-ticker-mask"
-                    : "overflow-hidden whitespace-nowrap text-ellipsis"
+                    : "overflow-hidden text-ellipsis"
                 }`}
               >
                 <span
@@ -498,10 +510,13 @@ export default function ExperienceBanner() {
                     className={tickerClassName}
                     style={
                       tickerVariant === "long"
-                        ? { animationDuration: `${tickerDuration}s` }
+                        ? { animationDuration: `${tickerDuration}s`, position: "absolute", left: "100%", top: 0 }
                         : {
                             animationDuration: `${tickerDuration}s`,
                             animationDelay: `${tickerDuration / 2}s`,
+                            position: "absolute",
+                            left: "100%",
+                            top: 0,
                           }
                     }
                   >

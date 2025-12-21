@@ -199,7 +199,7 @@ export default function LogoShowcase() {
                 onClick={() => updateGlobalSlug(studio.slug)}
                 aria-pressed={isActive}
                 aria-label={studio.name}
-                className={`flex h-20 w-20 items-center justify-center rounded-2xl border text-left transition sm:h-auto sm:w-auto sm:min-w-[11rem] sm:flex-shrink-0 sm:flex-row sm:gap-3 sm:px-4 sm:py-3 ${
+                className={`flex aspect-square h-20 w-20 items-center justify-center rounded-2xl border text-left transition sm:aspect-auto sm:h-auto sm:w-auto sm:min-w-[11rem] sm:flex-shrink-0 sm:flex-row sm:gap-3 sm:px-4 sm:py-3 ${
                   isActive
                     ? "border-white/80 bg-white/20 text-white"
                     : "border-white/10 text-white/70 hover:border-white/40"

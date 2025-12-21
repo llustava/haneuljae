@@ -114,19 +114,10 @@ pre,
 
 @keyframes banner-marquee {
   from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-100%);
-  }
-}
-
-@keyframes banner-marquee-right {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
     transform: translateX(100%);
+  }
+  to {
+    transform: translateX(-100%);
   }
 }
 
@@ -137,18 +128,19 @@ pre,
 }
 
 .banner-ticker-track {
-  animation: banner-marquee 16s linear infinite;
+  animation: banner-marquee 24s linear infinite;
   display: inline-flex;
   gap: 0.5rem;
+  padding-left: 2rem;
   padding-right: 2rem;
   white-space: nowrap;
 }
 
 .banner-ticker-track-long {
-  animation: banner-marquee-right 20s linear infinite;
+  animation: banner-marquee 28s linear infinite;
   display: inline-flex;
   gap: 0.5rem;
-  padding-left: 2rem;
-  padding-right: 2rem;
+  padding-left: 2.5rem;
+  padding-right: 2.5rem;
   white-space: nowrap;
 }
