@@ -465,89 +465,96 @@ export default function ExperienceBanner() {
 
   return (
     <div className="relative mb-6 overflow-hidden rounded-2xl border border-white/15 bg-white/5 p-4 text-white shadow-[0_12px_45px_rgba(15,23,42,0.45)] sm:p-5 lg:p-6">
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-3">
-          <span className="rounded-full border border-white/20 px-3 py-1 text-[0.65rem] uppercase tracking-[0.4em] text-white/70">
-            live
-          </span>
-          {isPreviewing ? (
-            <span className="rounded-full border border-amber-200/40 px-3 py-1 text-[0.65rem] uppercase tracking-[0.4em] text-amber-200">
-              preview
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex h-8 items-center rounded-full border border-white/25 bg-white/10 px-3 text-[0.65rem] uppercase tracking-[0.35em] text-white/80">
+              live
             </span>
-          ) : null}
-          {activeBanner ? (
-            <div className="flex flex-1 flex-col gap-2 text-sm text-white/80 sm:flex-row sm:items-center sm:gap-3">
-              <button
-                type="button"
-                onClick={() => handleNavigateToStudio(activeBanner.slug)}
-                className="inline-flex items-center rounded-full border border-dashed border-white/30 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:border-white"
-              >
-                {activeBanner.label}
-              </button>
-              <div
-                ref={messageViewportRef}
-                className={`relative flex-1 whitespace-nowrap ${
-                  shouldAnimateTicker
-                    ? "banner-ticker-mask"
-                    : "overflow-hidden text-ellipsis"
-                }`}
-              >
-                <span
-                  className={`inline-flex items-center gap-2 align-middle ${
-                    shouldAnimateTicker ? tickerClassName : ""
-                  }`}
-                  style={
-                    shouldAnimateTicker
-                      ? { animationDuration: `${tickerDuration}s` }
-                      : undefined
-                  }
-                >
-                  {renderBannerMessage(activeBanner.message)}
-                </span>
-                {shouldAnimateTicker ? (
-                  <span
-                    aria-hidden="true"
-                    className={tickerClassName}
-                    style={
-                      tickerVariant === "long"
-                        ? { animationDuration: `${tickerDuration}s`, position: "absolute", left: "100%", top: 0 }
-                        : {
-                            animationDuration: `${tickerDuration}s`,
-                            animationDelay: `${tickerDuration / 2}s`,
-                            position: "absolute",
-                            left: "100%",
-                            top: 0,
-                          }
-                    }
-                  >
-                    {renderBannerMessage(activeBanner.message)}
-                  </span>
-                ) : null}
-                <span
-                  aria-hidden="true"
-                  ref={messageMeasureRef}
-                  className="pointer-events-none absolute left-0 top-0 inline-flex whitespace-nowrap opacity-0"
-                >
-                  {renderBannerMessage(activeBanner.message)}
-                </span>
-              </div>
-            </div>
-          ) : (
-            <p className="flex-1 rounded-2xl border border-dashed border-white/20 px-3 py-2 text-sm text-white/60">
-              등록된 배너가 없습니다. 관리자에서 새 항목을 추가하세요.
-            </p>
-          )}
-          <div className="flex items-center gap-2 text-xs">
+            {isPreviewing ? (
+              <span className="inline-flex h-8 items-center rounded-full border border-amber-200/40 bg-amber-400/10 px-3 text-[0.65rem] uppercase tracking-[0.35em] text-amber-100">
+                preview
+              </span>
+            ) : null}
+          </div>
+
+          <div className="flex items-center gap-2 text-xs text-white/60">
+            <span className="hidden rounded-full border border-white/10 px-2 py-1 text-[0.65rem] uppercase tracking-[0.3em] sm:inline-flex">
+              banner
+            </span>
             <button
               type="button"
               onClick={handleSkip}
               disabled={!bannerCount}
-              className="rounded-full border border-white/20 px-2.5 py-1 text-white/70 transition hover:border-white hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-8 items-center rounded-full border border-white/20 px-2.5 text-white/70 transition hover:border-white hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               다음
             </button>
           </div>
         </div>
+
+        {activeBanner ? (
+          <div className="flex flex-col gap-2 text-sm text-white/80 sm:flex-row sm:items-center sm:gap-3">
+            <button
+              type="button"
+              onClick={() => handleNavigateToStudio(activeBanner.slug)}
+              className="inline-flex h-10 min-w-[132px] items-center justify-center rounded-full border border-dashed border-white/30 bg-white/5 px-4 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:border-white"
+            >
+              {activeBanner.label}
+            </button>
+            <div
+              ref={messageViewportRef}
+              className={`relative flex-1 min-w-0 ${
+                shouldAnimateTicker
+                  ? "banner-ticker-mask"
+                  : "overflow-hidden whitespace-nowrap text-ellipsis"
+              }`}
+            >
+              <span
+                className={`inline-flex items-center gap-2 align-middle leading-tight ${
+                  shouldAnimateTicker ? tickerClassName : ""
+                }`}
+                style={
+                  shouldAnimateTicker
+                    ? { animationDuration: `${tickerDuration}s` }
+                    : undefined
+                }
+              >
+                {renderBannerMessage(activeBanner.message)}
+              </span>
+              {shouldAnimateTicker ? (
+                <span
+                  aria-hidden="true"
+                  className={tickerClassName}
+                  style={
+                    tickerVariant === "long"
+                      ? { animationDuration: `${tickerDuration}s`, position: "absolute", left: "100%", top: 0 }
+                      : {
+                          animationDuration: `${tickerDuration}s`,
+                          animationDelay: `${tickerDuration / 2}s`,
+                          position: "absolute",
+                          left: "100%",
+                          top: 0,
+                        }
+                  }
+                >
+                  {renderBannerMessage(activeBanner.message)}
+                </span>
+              ) : null}
+              <span
+                aria-hidden="true"
+                ref={messageMeasureRef}
+                className="pointer-events-none absolute left-0 top-0 inline-flex whitespace-nowrap opacity-0"
+              >
+                {renderBannerMessage(activeBanner.message)}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <p className="flex-1 rounded-2xl border border-dashed border-white/20 px-3 py-2 text-sm text-white/60">
+            등록된 배너가 없습니다. 관리자에서 새 항목을 추가하세요.
+          </p>
+        )}
 
         <div className="flex items-center gap-2 text-[0.65rem] uppercase tracking-[0.4em] text-white/40">
           <div className="relative flex flex-1 gap-2 overflow-hidden" aria-label="다른 배너 선택">
