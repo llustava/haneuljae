@@ -10,13 +10,14 @@ import EmberHarbor from "@/content/ember-harbor/ember-harbor.mdx";
 import ZenithOrchard from "@/content/zenith-orchard/zenith-orchard.mdx";
 import MonsoonVault from "@/content/monsoon-vault/monsoon-vault.mdx";
 import PrismaDrift from "@/content/prisma-drift/prisma-drift.mdx";
-import ChronoDunes from "@/content/chrono-dunes/chrono-dunes.mdx";
 import DeltaForum from "@/content/delta-forum/delta-forum.mdx";
 import SierraHatch from "@/content/sierra-hatch/sierra-hatch.mdx";
 import QuietOrbit from "@/content/quiet-orbit/quiet-orbit.mdx";
 import STATISTICS from "@/content/STATISTICS/STATISTICS.mdx";
+import SIKSOON from "@/content/siksoon/siksoon.mdx";
 import TOPS from "@/content/TOPS/TOPS.mdx";
 import ESC from "@/content/ESC/ESC.mdx";
+
 
 export type StudioMetadata = {
   slug: string;
@@ -34,6 +35,7 @@ export type StudioConfig = StudioMetadata & {
 };
 
 const contentMap: Record<string, ComponentType> = {
+  "siksoon": SIKSOON,
   "statistics": STATISTICS,
   "tops": TOPS,
   "esc": ESC,
@@ -45,7 +47,6 @@ const contentMap: Record<string, ComponentType> = {
   "zenith-orchard": ZenithOrchard,
   "monsoon-vault": MonsoonVault,
   "prisma-drift": PrismaDrift,
-  "chrono-dunes": ChronoDunes,
   "delta-forum": DeltaForum,
   "sierra-hatch": SierraHatch,
   "quiet-orbit": QuietOrbit,

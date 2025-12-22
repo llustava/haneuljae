@@ -1,5 +1,14 @@
 [
   {
+    "slug": "siksoon",
+    "name": "식순",
+    "tagline": "",
+    "summary": "",
+    "category": "",
+    "accent": "from-slate-100/90 to-white/70",
+    "logo": "/HSHS_LOGO.svg"
+  },
+  {
     "slug": "statistics",
     "name": "직감vs데이터",
     "tagline": "STATISTICS",
@@ -85,16 +94,6 @@
     "accent": "from-purple-400/70 to-pink-500/60",
     "logo": "/logos/prisma-drift.svg",
     "bannerMessage": "이동식 프리즘 주행이 오늘 21시에 출발"
-  },
-  {
-    "slug": "chrono-dunes",
-    "name": "Chrono Dunes",
-    "tagline": "Temporal desert studio",
-    "summary": "사막 모래 이동을 시간 단위로 기록해 증강현실 전시에 반영하는 시간 기반 설치팀입니다.",
-    "category": "GEOMEDIA",
-    "accent": "from-amber-200/80 to-stone-400/60",
-    "logo": "/logos/chrono-dunes.svg",
-    "bannerMessage": "사막 모래 시간지도 베타 공개"
   },
   {
     "slug": "delta-forum",
