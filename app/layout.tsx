@@ -18,7 +18,6 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
   ),
   title: "2025 한어울제",
-  description: "ㅤㅤㅤㅤ",
   icons: {
     icon: "/HSHS_LOGO.svg",
   },
