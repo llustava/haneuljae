@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   icons: {
     icon: "/HSHS_LOGO.svg",
   },
-  
+  description: "  ",
   openGraph: {
   images: ["/og-default.png"],
 },
