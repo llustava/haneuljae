@@ -59,6 +59,7 @@ pre,
   gap: 1.25rem;
   font-size: 1rem;
   line-height: 1.8;
+  color: #f8fafc;
 }
 
 .mdx-content h2,
@@ -70,7 +71,7 @@ pre,
 }
 
 .mdx-content p {
-  color: rgba(226, 232, 240, 0.85);
+  color: #f8fafc;
 }
 
 .mdx-content strong {
