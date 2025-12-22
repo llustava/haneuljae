@@ -9,24 +9,22 @@
     "logo": "/logos/STATISTICS.svg"
   },
   {
-    "slug": "solstice-market",
-    "name": "Solstice Market",
-    "tagline": "Traveling sensory shop",
-    "summary": "계절형 팝업과 투어링 마켓을 동시에 설계해 관람자 피드백을 즉시 반영하는 이동형 리테일 실험실입니다.",
-    "category": "POP-UP",
+    "slug": "tops",
+    "name": "물리 레크레이션",
+    "tagline": "TOPS",
+    "summary": "다양한 피지컬·뇌지컬 게임을 즐기세요!",
+    "category": "물리학실험실",
     "accent": "from-amber-300/80 to-orange-500/60",
-    "logo": "/logos/solstice.svg",
-    "bannerMessage": "계절형 팝업 설계 키트 무료 배포 중"
+    "logo": "/logos/TOPS.svg"
   },
   {
-    "slug": "nebula-lab",
-    "name": "Nebula Lab",
-    "tagline": "Sensorial data theater",
-    "summary": "도시 센서 데이터를 냄새·빛·소리로 재구성해 몰입형 데이터 시어터를 만드는 실험실입니다.",
-    "category": "DATA SPACE",
+    "slug": "esc",
+    "name": "게임빼고다함",
+    "tagline": "ESC",
+    "summary": "게임 가지고 플레이만 안 하고, 나머지 전부 하는 동아리입니다.",
+    "category": "컴퓨터실",
     "accent": "from-fuchsia-400/70 to-indigo-500/60",
-    "logo": "/logos/nebula.svg",
-    "bannerMessage": "데이터 시어터 가이드라인 실시간 Q&A"
+    "logo": "/logos/ESC.svg"
   },
   {
     "slug": "tidal-forge",

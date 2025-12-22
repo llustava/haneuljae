@@ -15,6 +15,8 @@ import DeltaForum from "@/content/delta-forum/delta-forum.mdx";
 import SierraHatch from "@/content/sierra-hatch/sierra-hatch.mdx";
 import QuietOrbit from "@/content/quiet-orbit/quiet-orbit.mdx";
 import STATISTICS from "@/content/STATISTICS/STATISTICS.mdx";
+import TOPS from "@/content/TOPS/TOPS.mdx";
+import ESC from "@/content/ESC/ESC.mdx";
 
 export type StudioMetadata = {
   slug: string;
@@ -32,8 +34,9 @@ export type StudioConfig = StudioMetadata & {
 };
 
 const contentMap: Record<string, ComponentType> = {
-  "aurora-lens": AuroraLens,
   "statistics": STATISTICS,
+  "tops": TOPS,
+  "esc": ESC,
   "solstice-market": SolsticeMarket,
   "nebula-lab": NebulaLab,
   "tidal-forge": TidalForge,
