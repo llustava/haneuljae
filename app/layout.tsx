@@ -17,8 +17,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
   ),
-  title: "2025 한어울제 소개",
-  description: "2025년 한어울제를 소개하고, 의견을 공유하는 사이트입니다.",
+  title: "2025 한어울제",
   icons: {
     icon: "/HSHS_LOGO.svg",
   },
