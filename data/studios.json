@@ -36,93 +36,84 @@
     "logo": "/logos/ESC.svg"
   },
   {
-    "slug": "tidal-forge",
-    "name": "Tidal Forge",
-    "tagline": "Littoral wave foundry",
-    "summary": "조석 흐름을 실시간 시각화해 파동 데이터를 디자인 모듈로 바꾸는 해양형 스튜디오입니다.",
-    "category": "TIDAL LAB",
+    "slug": "heni",
+    "name": "한성 오락실 ver.2",
+    "tagline": "HENI",
+    "summary": "하하호호~~!! 다함께 즐길 수 있는 게임들로 구성된 오락실입니다.",
+    "category": "메이커스페이스실",
     "accent": "from-cyan-500/70 to-blue-600/60",
-    "logo": "/logos/tidal-forge.svg",
-    "bannerMessage": "조석 파동 보드 실험, 오늘 16시 스트리밍"
+    "logo": "/logos/HENI.svg"
   },
   {
-    "slug": "lumen-bay",
-    "name": "Lumen Bay",
-    "tagline": "Urban light archivist",
-    "summary": "도심광 채집 프로토콜로 브랜드 라이팅 라이브러리를 만드는 광 데이터 실험실입니다.",
-    "category": "URBAN LIGHT",
+    "slug": "enpro",
+    "name": "귀신의 집 & 슈링클스",
+    "tagline": "ENPRO",
+    "summary": "공포와 귀여움의 조화",
+    "category": "다목적실 2, 3",
     "accent": "from-yellow-200/70 to-lime-400/60",
-    "logo": "/logos/lumen-bay.svg",
-    "bannerMessage": "도심광 캡처 프리셋 베타 액세스 오픈"
+    "logo": "/logos/ENPRO.svg"
   },
   {
-    "slug": "ember-harbor",
-    "name": "Ember Harbor",
-    "tagline": "Harbor scent theater",
-    "summary": "폐선 창고를 개조해 향·사운드·빛을 겹쳐 항만 내러티브를 재현하는 향기 극장입니다.",
-    "category": "SENSE STAGE",
+    "slug": "fad",
+    "name": "포토존/크리스마스테마",
+    "tagline": "FAD",
+    "summary": "포토존과 다양한 이벤트 부스! 체험하고 가세요~",
+    "category": "화학실험실 2",
     "accent": "from-rose-400/70 to-orange-400/60",
-    "logo": "/logos/ember-harbor.svg",
-    "bannerMessage": "항만 향기 극장 신작 프리뷰 티켓 오픈"
+    "logo": "/logos/FAD.svg"
   },
   {
-    "slug": "zenith-orchard",
-    "name": "Zenith Orchard",
-    "tagline": "Vertical climate gallery",
-    "summary": "고층 온실을 미디어 갤러리로 전환해 기상 데이터를 감각 카드로 만드는 연구소입니다.",
-    "category": "CLIMATE MEDIA",
+    "slug": "arisu",
+    "name": "물병 3종 경기",
+    "tagline": "아리수",
+    "summary": "세우고 튕기고 알아맞히세요!",
+    "category": "1층 연수실",
     "accent": "from-emerald-300/70 to-teal-500/60",
-    "logo": "/logos/zenith-orchard.svg",
-    "bannerMessage": "고층 온실 인터랙션 레지던시 2기 모집"
+    "logo": "/logos/ARISU.svg"
   },
   {
-    "slug": "monsoon-vault",
-    "name": "Monsoon Vault",
-    "tagline": "Tropical downpour lab",
-    "summary": "열대 폭우의 패턴을 다채널 사운드와 레이더 그래픽으로 기록하는 이동식 연구소입니다.",
-    "category": "CLIMATE AUDIO",
+    "slug": "wings",
+    "name": "THE ONE",
+    "tagline": "WINGS",
+    "summary": "한성 트라이아웃",
+    "category": "한어울터 안쪽 학생회실",
     "accent": "from-blue-500/70 to-indigo-600/60",
-    "logo": "/logos/monsoon-vault.svg",
-    "bannerMessage": "폭우 데이터 워크숍 월드 투어 대기 중"
+    "logo": "/logos/WINGS.svg"
   },
   {
-    "slug": "prisma-drift",
-    "name": "Prisma Drift",
-    "tagline": "Mobile spectrum studio",
-    "summary": "프리즘 돔 차량으로 도시 빛을 분광해 즉시 팔레트를 공유하는 이동식 스펙트럼 랩입니다.",
-    "category": "COLOR OPS",
+    "slug": "jinjung",
+    "name": "소리가 들리지 않는다면?",
+    "tagline": "진정",
+    "summary": "수어 및 농인 이해",
+    "category": "지구과학실험실 1",
     "accent": "from-purple-400/70 to-pink-500/60",
-    "logo": "/logos/prisma-drift.svg",
-    "bannerMessage": "이동식 프리즘 주행이 오늘 21시에 출발"
+    "logo": "/logos/JINJUNG.svg"
   },
   {
-    "slug": "delta-forum",
-    "name": "Delta Forum",
-    "tagline": "Estuary archive club",
-    "summary": "강 하구의 생활 데이터와 인터뷰를 다층 전시로 엮는 커뮤니티 플랫폼입니다.",
-    "category": "CIVIC STREAM",
-    "accent": "from-cyan-400/70 to-emerald-400/60",
-    "logo": "/logos/delta-forum.svg",
-    "bannerMessage": "하구 아카이브 포럼 라이브 세션 진행 중"
+    "slug": "bm",
+    "name": "하바플라리움 체험",
+    "tagline": "BM",
+    "summary": "나만의 작은 정원 만들기",
+    "category": "생명과학실험실",
+    "accent": "from-lime-500/75 to-emerald-300/60",
+    "logo": "/logos/BM.svg"
   },
   {
-    "slug": "sierra-hatch",
-    "name": "Sierra Hatch",
-    "tagline": "Alpine field camp",
-    "summary": "고도별 캠프를 순회하며 기압·빛·사운드를 재현하는 야외 실험실 네트워크입니다.",
-    "category": "ALTITUDE OPS",
-    "accent": "from-sky-300/80 to-blue-500/60",
-    "logo": "/logos/sierra-hatch.svg",
-    "bannerMessage": "고산 캠프 감마 루트 오늘 오픈"
+    "slug": "cale",
+    "name": "카리 게임 스튜디오",
+    "tagline": "cal.ε.s.",
+    "summary": "gamestudio, tarot, facepainting!!",
+    "category": "한빛꿈터",
+    "accent": "from-teal-400/80 to-violet-500/60",
+    "logo": "/logos/CALE.svg"
   },
   {
-    "slug": "quiet-orbit",
-    "name": "Quiet Orbit",
-    "tagline": "Civic observatory",
-    "summary": "도심 옥상 관측소를 통해 빛과 소리를 동시에 수집하는 사운드·빛 연구 클럽입니다.",
-    "category": "NIGHT STUDIO",
-    "accent": "from-indigo-500/70 to-slate-500/60",
-    "logo": "/logos/quiet-orbit.svg",
-    "bannerMessage": "도심 관측 세션이 새벽 2시에 시작됩니다"
+    "slug": "polaris",
+    "name": "모여봐요 천문의 밤",
+    "tagline": "POLARIS",
+    "summary": "별과 함께하는 즐거운 시간!",
+    "category": "천문대",
+    "accent": "from-violet-300/70 to-rose-600/60",
+    "logo": "/logos/POLARIS.svg"
   }
 ]

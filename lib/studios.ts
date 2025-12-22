@@ -1,22 +1,19 @@
 import type { ComponentType } from "react";
+import ARISU from "@/content/ARISU.mdx";
+import JINJUNG from "@/content/JINJUNG.mdx";
+import ENPRO from "@/content/ENPRO.mdx";
+import ESC from "@/content/ESC.mdx";
+import FAD from "@/content/FAD.mdx";
+import HENI from "@/content/HENI.mdx";
+import SIKSOON from "@/content/siksoon.mdx";
+import STATISTICS from "@/content/STATISTICS.mdx";
+import TOPS from "@/content/TOPS.mdx";
+import WINGS from "@/content/WINGS.mdx";
+import BM from "@/content/BM.mdx";
+import POLARIS from "@/content/POLARIS.mdx";
+import CALE from "@/content/CALE.mdx";
 import studiosData from "@/data/studios.json";
 
-import AuroraLens from "@/content/aurora-lens/aurora-lens.mdx";
-import SolsticeMarket from "@/content/solstice-market/solstice-market.mdx";
-import NebulaLab from "@/content/nebula-lab/nebula-lab.mdx";
-import TidalForge from "@/content/tidal-forge/tidal-forge.mdx";
-import LumenBay from "@/content/lumen-bay/lumen-bay.mdx";
-import EmberHarbor from "@/content/ember-harbor/ember-harbor.mdx";
-import ZenithOrchard from "@/content/zenith-orchard/zenith-orchard.mdx";
-import MonsoonVault from "@/content/monsoon-vault/monsoon-vault.mdx";
-import PrismaDrift from "@/content/prisma-drift/prisma-drift.mdx";
-import DeltaForum from "@/content/delta-forum/delta-forum.mdx";
-import SierraHatch from "@/content/sierra-hatch/sierra-hatch.mdx";
-import QuietOrbit from "@/content/quiet-orbit/quiet-orbit.mdx";
-import STATISTICS from "@/content/STATISTICS/STATISTICS.mdx";
-import SIKSOON from "@/content/siksoon/siksoon.mdx";
-import TOPS from "@/content/TOPS/TOPS.mdx";
-import ESC from "@/content/ESC/ESC.mdx";
 
 
 export type StudioMetadata = {
@@ -39,17 +36,15 @@ const contentMap: Record<string, ComponentType> = {
   "statistics": STATISTICS,
   "tops": TOPS,
   "esc": ESC,
-  "solstice-market": SolsticeMarket,
-  "nebula-lab": NebulaLab,
-  "tidal-forge": TidalForge,
-  "lumen-bay": LumenBay,
-  "ember-harbor": EmberHarbor,
-  "zenith-orchard": ZenithOrchard,
-  "monsoon-vault": MonsoonVault,
-  "prisma-drift": PrismaDrift,
-  "delta-forum": DeltaForum,
-  "sierra-hatch": SierraHatch,
-  "quiet-orbit": QuietOrbit,
+  "heni": HENI,
+  "enpro": ENPRO,
+  "fad": FAD,
+  "arisu": ARISU,
+  "wings": WINGS,
+  "jinjung": JINJUNG,
+  "bm": BM,
+  "cale": CALE,
+  "polaris": POLARIS
 };
 
 export const studioMetadata = studiosData as StudioMetadata[];

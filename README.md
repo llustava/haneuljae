@@ -43,7 +43,7 @@ NEXT_PUBLIC_FIREBASE_ALLOWED_DOMAIN="@hansung-sh.hs.kr"
 
 `components/vote-panel.tsx`는 `logoVotes` 컬렉션을 사용하며, 문서 ID는 `<slug>_<uid>` 형식으로 저장됩니다.
 
-`components/comment-panel.tsx`는 `logoComments` 컬렉션을 이용합니다. 필드는 `slug`, `parentId`, `body`, `userId`, `displayName`, `createdAt`, `isDeleted`(soft delete), `deletedAt`이며 최상위 댓글과 1단계 대댓글만 허용합니다. Firestore에서 `slug` + `createdAt` 조합으로 정렬할 수 있도록 복합 인덱스를 생성해야 합니다.
+댓글 인터페이스는 현재 비활성화되어 있어 별도의 `logoComments` 컬렉션 구성은 필요하지 않습니다.
 
 ## 배포
 
