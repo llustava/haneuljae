@@ -1,8 +1,10 @@
 import type { ComponentType } from "react";
 import ARISU from "@/content/ARISU.mdx";
+import COUNCIL from "@/content/COUNCIL.mdx";
 import JINJUNG from "@/content/JINJUNG.mdx";
 import ENPRO from "@/content/ENPRO.mdx";
 import ESC from "@/content/ESC.mdx";
+import ATOMIX from "@/content/ATOMIX.mdx"
 import FAD from "@/content/FAD.mdx";
 import HENI from "@/content/HENI.mdx";
 import SIKSOON from "@/content/siksoon.mdx";
@@ -33,11 +35,13 @@ export type StudioConfig = StudioMetadata & {
 
 const contentMap: Record<string, ComponentType> = {
   "siksoon": SIKSOON,
+  "council": COUNCIL,
   "statistics": STATISTICS,
   "tops": TOPS,
   "esc": ESC,
   "heni": HENI,
   "enpro": ENPRO,
+  "atomix": ATOMIX,
   "fad": FAD,
   "arisu": ARISU,
   "wings": WINGS,

@@ -9,6 +9,15 @@
     "logo": "/HSHS_LOGO.svg"
   },
   {
+    "slug": "council",
+    "name": "쉬어가기",
+    "tagline": "학생회",
+    "summary": "힐링, 재미 이벤트 부스",
+    "category": "1-4, 1-5, 1-6",
+    "accent": "from-slate-100/90 to-white/70",
+    "logo": "/logos/COUNCIL.svg"
+  },
+  {
     "slug": "statistics",
     "name": "직감vs데이터",
     "tagline": "STATISTICS",
@@ -52,6 +61,15 @@
     "category": "다목적실 2, 3",
     "accent": "from-yellow-200/70 to-lime-400/60",
     "logo": "/logos/ENPRO.svg"
+  },
+  {
+    "slug": "atomix",
+    "name": "산타의 비밀 실험실",
+    "tagline": "ATOMIX",
+    "summary": "혀끝은 영하 196도, 손끝은 알코올 사격!",
+    "category": "화학실험실 1",
+    "accent": "from-orange-500/80 to-amber-400/70",
+    "logo": "/logos/ATOMIX.svg"
   },
   {
     "slug": "fad",
