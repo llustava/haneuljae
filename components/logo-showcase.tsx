@@ -281,7 +281,7 @@ export default function LogoShowcase() {
         </aside>
         <div className="flex flex-1 flex-col gap-6 p-6 sm:p-8">
           <div className="space-y-3">
-            <p className="text-xs uppercase tracking-[0.5em] text-white/50">{activeStudio.category}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-yellow-300">{activeStudio.category}</p>
             <div className="flex flex-wrap items-center gap-3">
               <h2 className="text-4xl font-semibold text-white">{activeStudio.name}</h2>
               <span className="rounded-full border border-white/15 px-3 py-1 text-xs text-white/60">
