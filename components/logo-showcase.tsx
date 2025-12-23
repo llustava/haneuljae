@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import Image from "next/image";
 
 import { studios } from "@/lib/studios";
-import VotePanel from "@/components/vote-panel";
 
 const isValidStudioSlug = (slug: string | undefined): slug is string =>
   Boolean(slug && studios.some((studio) => studio.slug === slug));
@@ -295,7 +294,6 @@ export default function LogoShowcase() {
           </div>
         </div>
       </div>
-      <VotePanel slug={activeStudio.slug} title={activeStudio.name} />
     </section>
   );
 }

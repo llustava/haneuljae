@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import {
   collection,
@@ -121,6 +121,11 @@ export default function ExperienceBanner() {
 
   const messageViewportRef = useRef<HTMLDivElement | null>(null);
   const messageMeasureRef = useRef<HTMLSpanElement | null>(null);
+  const titleRailRef = useRef<HTMLDivElement | null>(null);
+  const titleScrollRafRef = useRef<number | null>(null);
+  const titleScrollUserTimeoutRef = useRef<number | null>(null);
+  const isUserScrollingTitlesRef = useRef(false);
+  const activeIndexRef = useRef(activeIndex);
 
   /* ---------- Derived ---------- */
   const bannerCount = queue.length;
@@ -135,6 +140,10 @@ export default function ExperienceBanner() {
 
   const isPreviewing = Boolean(previewBanner);
   const isAdmin = isAdminEmail(user?.email);
+
+  useEffect(() => {
+    activeIndexRef.current = activeIndex;
+  }, [activeIndex]);
 
   /* =======================
      Firebase Init
@@ -213,15 +222,17 @@ export default function ExperienceBanner() {
 
         items.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
         setQueue(items);
+        setAuthError(null);
       },
       (error) => {
         console.error("배너 데이터를 불러오지 못했습니다", error);
-        setAuthError("배너 데이터를 불러오지 못했습니다. 잠시 후 다시 시도하세요.");
+        setQueue([]);
+        setAuthError(isAdmin ? "배너 데이터를 불러오지 못했습니다. 잠시 후 다시 시도하세요." : null);
       },
     );
 
     return () => unsubscribe();
-  }, [client]);
+  }, [client, isAdmin]);
 
   /* =======================
      Sync Draft
@@ -254,6 +265,92 @@ export default function ExperienceBanner() {
       setActiveIndex(0);
     }
   }, [activeIndex, bannerCount]);
+
+  useEffect(() => {
+    const rail = titleRailRef.current;
+    if (!rail || !queue.length) {
+      return undefined;
+    }
+
+    const markUserScroll = () => {
+      isUserScrollingTitlesRef.current = true;
+      if (titleScrollUserTimeoutRef.current) {
+        window.clearTimeout(titleScrollUserTimeoutRef.current);
+      }
+      titleScrollUserTimeoutRef.current = window.setTimeout(() => {
+        isUserScrollingTitlesRef.current = false;
+        titleScrollUserTimeoutRef.current = null;
+      }, 400);
+    };
+
+    const handleScroll = () => {
+      markUserScroll();
+      if (titleScrollRafRef.current) {
+        window.cancelAnimationFrame(titleScrollRafRef.current);
+      }
+
+      titleScrollRafRef.current = window.requestAnimationFrame(() => {
+        if (!titleRailRef.current) {
+          return;
+        }
+
+        const containerRect = titleRailRef.current.getBoundingClientRect();
+        const midpoint = containerRect.left + containerRect.width / 2;
+        let closestIndex = activeIndexRef.current;
+        let minDistance = Number.POSITIVE_INFINITY;
+
+        queue.forEach((_, index) => {
+          const button = titleRailRef.current?.querySelector<HTMLElement>(
+            `[data-banner-index="${index}"]`,
+          );
+          if (!button) {
+            return;
+          }
+
+          const rect = button.getBoundingClientRect();
+          const center = rect.left + rect.width / 2;
+          const distance = Math.abs(center - midpoint);
+
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestIndex = index;
+          }
+        });
+
+        if (closestIndex !== activeIndexRef.current) {
+          setActiveIndex(closestIndex);
+        }
+      });
+    };
+
+    rail.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      rail.removeEventListener("scroll", handleScroll);
+      if (titleScrollRafRef.current) {
+        window.cancelAnimationFrame(titleScrollRafRef.current);
+        titleScrollRafRef.current = null;
+      }
+      if (titleScrollUserTimeoutRef.current) {
+        window.clearTimeout(titleScrollUserTimeoutRef.current);
+        titleScrollUserTimeoutRef.current = null;
+      }
+    };
+  }, [queue]);
+
+  useEffect(() => {
+    if (isUserScrollingTitlesRef.current) {
+      return;
+    }
+
+    const rail = titleRailRef.current;
+    if (!rail) {
+      return;
+    }
+
+    const button = rail.querySelector<HTMLElement>(`[data-banner-index="${activeIndex}"]`);
+    button?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  }, [activeIndex, queue.length]);
 
   /* =======================
      Ticker Logic
@@ -307,20 +404,6 @@ export default function ExperienceBanner() {
   }, [activeBanner?.message, tickerVariant]);
 
   /* =======================
-     Queue Preview
-  ======================= */
-
-  const queuePreview = useMemo(() => {
-    if (!bannerCount) return [];
-
-    return queue.map((item, index) => ({
-      item,
-      isActive: index === activeIndex,
-      position: (index - activeIndex + bannerCount) % bannerCount,
-    }));
-  }, [queue, activeIndex, bannerCount]);
-
-  /* =======================
      Actions
   ======================= */
 
@@ -333,20 +416,6 @@ export default function ExperienceBanner() {
     if (bannerCount) {
       setActiveIndex((prev) => (prev + 1) % bannerCount);
     }
-  };
-
-  const handleNavigateToStudio = (slug: string) => {
-    if (!slug || typeof window === "undefined") {
-      return;
-    }
-
-    window.dispatchEvent(new CustomEvent("studio:select", { detail: slug }));
-    const showcaseSection = document.getElementById("logo-showcase");
-    showcaseSection?.scrollIntoView({ behavior: "smooth", block: "start" });
-
-    const nextUrl = new URL(window.location.href);
-    nextUrl.hash = slug;
-    window.history.replaceState(null, "", nextUrl);
   };
 
   const handleLogout = async () => {
@@ -494,14 +563,7 @@ export default function ExperienceBanner() {
         </div>
 
         {activeBanner ? (
-          <div className="flex flex-col gap-2 text-sm text-white/80 sm:flex-row sm:items-center sm:gap-3">
-            <button
-              type="button"
-              onClick={() => handleNavigateToStudio(activeBanner.slug)}
-              className="inline-flex h-10 min-w-[132px] items-center justify-center rounded-full border border-dashed border-white/30 bg-white/5 px-4 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:border-white"
-            >
-              {activeBanner.label}
-            </button>
+          <div className="text-sm text-white/80">
             <div
               ref={messageViewportRef}
               className={`relative flex-1 min-w-0 ${
@@ -557,26 +619,29 @@ export default function ExperienceBanner() {
         )}
 
         <div className="flex items-center gap-2 text-[0.65rem] uppercase tracking-[0.4em] text-white/40">
-          <div className="relative flex flex-1 gap-2 overflow-hidden" aria-label="다른 배너 선택">
-            {queuePreview.length ? (
-              queuePreview.map(({ item, isActive, position }, index) => (
+          <div
+            ref={titleRailRef}
+            className="relative flex flex-1 gap-2 overflow-x-auto pr-2 no-scrollbar scroll-smooth snap-x snap-mandatory"
+            aria-label="다른 배너 선택"
+          >
+            {queue.length ? (
+              queue.map((item, index) => (
                 <button
                   key={item.id}
                   type="button"
+                  data-banner-index={index}
                   onClick={() => setActiveIndex(index)}
-                  className={`min-w-[120px] rounded-full border px-3 py-1 text-[0.7rem] tracking-normal transition ${
-                    isActive
+                  className={`snap-center min-w-[140px] shrink-0 rounded-full border px-4 py-2 text-[0.7rem] tracking-[0.15em] transition ${
+                    index === activeIndex
                       ? "border-sky-300/80 bg-sky-400/10 text-white"
-                      : position === 1
-                        ? "border-white/30 text-white/80"
-                        : "border-white/10 text-white/40"
+                      : "border-white/15 text-white/50 hover:border-white/30 hover:text-white/80"
                   }`}
                 >
                   {item.label}
                 </button>
               ))
             ) : (
-              <span className="w-full rounded-full border border-dashed border-white/15 px-3 py-1 text-[0.7rem] text-white/50 tracking-[0.1em]">
+              <span className="w-full rounded-full border border-dashed border-white/15 px-3 py-2 text-[0.7rem] text-white/50 tracking-[0.1em]">
                 다른 공지가 없습니다.
               </span>
             )}
